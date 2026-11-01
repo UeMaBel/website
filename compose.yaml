@@ -1,0 +1,88 @@
+services:
+  db:
+    image: postgres:17.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-website}
+      POSTGRES_USER: ${POSTGRES_USER:-website}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in backend/.env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - database
+
+  backend:
+    build:
+      context: ./backend
+      target: production
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - >-
+        python manage.py migrate --noinput
+        && exec gunicorn --bind=0.0.0.0:8000 --workers=2 --access-logfile=-
+        --error-logfile=- config.wsgi:application
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in backend/.env}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_MEDIA_ROOT: /data/media
+      DJANGO_MEDIA_URL: /media/
+      POSTGRES_DB: ${POSTGRES_DB:-website}
+      POSTGRES_USER: ${POSTGRES_USER:-website}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in backend/.env}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - media_data:/data/media
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          from urllib.request import urlopen; response = urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=2); exit(0 if response.status == 200 else 1)
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    networks:
+      - frontend
+      - database
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    restart: unless-stopped
+    environment:
+      BACKEND_API_URL: http://backend:8000
+      PUBLIC_SITE_ORIGIN: ${PUBLIC_SITE_ORIGIN:-http://localhost:3000}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - frontend
+
+volumes:
+  postgres_data:
+  media_data:
+
+networks:
+  frontend:
+  database:
+    internal: true
