@@ -77,6 +77,8 @@ services:
   proxy:
     image: caddy:2.10.2-alpine
     restart: unless-stopped
+    environment:
+      ANALYTICS_HOST: ${ANALYTICS_HOST:-analytics.localhost}
     depends_on:
       backend:
         condition: service_healthy

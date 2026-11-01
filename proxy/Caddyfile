@@ -18,3 +18,9 @@ http://demo.localhost {
 		reverse_proxy demo:80
 	}
 }
+
+http://{$ANALYTICS_HOST:analytics.localhost} {
+	handle {
+		reverse_proxy umami:3000
+	}
+}
