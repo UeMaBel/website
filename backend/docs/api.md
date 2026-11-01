@@ -201,6 +201,13 @@ Run the focused PostgreSQL-backed regression suite from `backend/` with:
 uv run --frozen --env-file .env manage.py test tests.test_blog_api
 ```
 
+Focused PostgreSQL-backed profile and project API regression tests run from
+`backend/` with:
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_profile_project_api
+```
+
 ## Repeatable local verification
 
 From `backend/` with the documented local `.env`:
