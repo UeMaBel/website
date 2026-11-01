@@ -17,11 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from blog.views import public_blog_list
 from profiles.views import public_profile
 from .views import health
 
 urlpatterns = [
     path("api/v1/health/", health, name="health"),
+    path('api/v1/blog/posts/', public_blog_list, name='public-blog-list'),
     path('api/v1/profile/', public_profile, name='public-profile'),
     path('admin/', admin.site.urls),
 ]
