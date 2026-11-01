@@ -47,6 +47,10 @@ export interface BlogPost extends BlogPostSummary {
   body: string;
 }
 
+export interface BlogPostPreview extends Omit<BlogPost, "published_at"> {
+  published_at: null;
+}
+
 export interface Page<T> {
   count: number;
   next: string | null;
@@ -154,14 +158,18 @@ function backendUrl(path: string): URL {
   return new URL(path, baseUrl);
 }
 
-async function requestJson<T>(path: string): Promise<T> {
+async function requestJson<T>(path: string, sessionId?: string): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(backendUrl(path), {
       cache: "no-store",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        ...(sessionId ? { Cookie: `sessionid=${sessionId}` } : {}),
+      },
+      ...(sessionId ? { redirect: "manual" as const } : {}),
       signal: controller.signal,
     });
 
@@ -207,6 +215,13 @@ export function getBlogPosts(options: BlogPostListOptions = {}): Promise<Page<Bl
 
 export function getBlogPost(slug: string): Promise<BlogPost> {
   return requestJson(`/api/v1/blog/posts/${encodeURIComponent(slug)}/`);
+}
+
+export async function getBlogPostPreview(slug: string, sessionId: string): Promise<BlogPostPreview> {
+  if (!sessionId) {
+    throw new ApiError("http", "Authentication required.", 401);
+  }
+  return requestJson(`/api/v1/blog/posts/${encodeURIComponent(slug)}/preview/`, sessionId);
 }
 
 export function getBlogTags(): Promise<Collection<BlogTagWithCount>> {

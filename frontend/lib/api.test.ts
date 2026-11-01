@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ApiError,
   getBlogPost,
+  getBlogPostPreview,
   getBlogPosts,
   getBlogTags,
   getProfile,
@@ -112,6 +113,44 @@ describe("server-side API client", () => {
       "https://content.example.test/api/v1/projects/",
       "https://content.example.test/api/v1/projects/sample/",
     ]);
+  });
+
+  it("forwards only the Django session cookie to the authenticated preview route", async () => {
+    vi.stubEnv("BACKEND_API_URL", "https://content.example.test");
+    const preview = {
+      slug: "draft-post",
+      title: "Draft post",
+      published_at: null,
+      author: { username: "owner", name: "Site Owner" },
+      tags: [],
+      body: "Draft Markdown",
+    };
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(preview));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getBlogPostPreview("draft-post", "trusted-session-value")).resolves.toEqual(preview);
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL("https://content.example.test/api/v1/blog/posts/draft-post/preview/"),
+      expect.objectContaining({
+        cache: "no-store",
+        redirect: "manual",
+        headers: {
+          Accept: "application/json",
+          Cookie: "sessionid=trusted-session-value",
+        },
+      }),
+    );
+  });
+
+  it("rejects an empty preview session without making a backend request", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getBlogPostPreview("draft-post", "")).rejects.toMatchObject({
+      code: "http",
+      status: 401,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("uses the documented local origin when the backend URL is unset", async () => {
