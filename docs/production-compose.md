@@ -89,6 +89,7 @@ docker compose --env-file /protected/path/website-production.env -f compose.prod
 ```
 
 Removing volumes deletes the database, uploaded files, and Caddy's stored
-certificate state. Ensure separately managed backups are available before
-doing so. Off-host backups and restore drills are operational requirements and
-are not performed by this Compose configuration.
+certificate state. Ensure a database and media backup is available before doing
+so. See [backup and restore](backup-restore.md) for the commands and an isolated
+restore drill. The command does not schedule backups, encrypt them, or transfer
+them off-server; ticket58 owns those operations.
