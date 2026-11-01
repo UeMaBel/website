@@ -76,8 +76,8 @@ uv run --frozen --env-file .env manage.py shell -c "from django.test import Clie
 
 `GET /api/v1/blog/posts/` is public and accepts `page` and `page_size` query
 parameters. `page` defaults to 1. `page_size` defaults to 10 and must be between
-1 and 100. Other query parameters are rejected; tag filtering is added by a
-later API ticket.
+1 and 100. The optional `tag` parameter filters results by tag slug. Other
+query parameters are rejected.
 
 The endpoint returns only published posts, ordered by publication time
 descending and then primary key descending. Drafts are never included. Tags are
@@ -116,13 +116,37 @@ HTTP 200 with `count: 0`, empty `results`, and null links. A malformed or
 nonpositive `page`, a `page_size` outside 1–100, or an unsupported query
 parameter returns HTTP 400 with `{"detail":"..."}`. A positive page beyond
 the last available page returns HTTP 404 with `{"detail":"Page not found."}`.
+The `tag` parameter must be non-empty. A tag with no published posts or an
+unknown tag slug returns HTTP 404 with `{"detail":"Not found."}`. Pagination
+links retain the selected tag filter.
 `HEAD` is allowed without a response body; other methods receive HTTP 405.
+
+`GET /api/v1/blog/posts/<slug>/` returns the published post matching its slug,
+using the listing fields and adding `body` with the Markdown source. A missing
+slug and a draft post both return HTTP 404 with the same
+`{"detail":"Not found."}` response. The endpoint is public and accepts no
+query parameters.
+
+`GET /api/v1/blog/tags/` returns tags that are attached to at least one
+published post, ordered by name then primary key. Each result has `slug`,
+`name`, and `post_count` for published posts only. The response is
+`{"count": <tag count>, "results": [...]}`. Tags used only by drafts are not
+exposed. This endpoint accepts no query parameters; otherwise it returns HTTP
+400 with `{"detail":"This endpoint does not accept query parameters."}`.
+Both endpoints allow `HEAD` without a response body and return HTTP 405 for
+other methods.
 
 Repeatable smoke check against the configured database:
 
 ```sh
 uv run --frozen --env-file .env manage.py shell -c "from django.test import Client; c=Client(HTTP_HOST='localhost'); r=c.get('/api/v1/blog/posts/?page=1&page_size=2'); assert r.status_code == 200 and r.headers['Content-Type'] == 'application/json'; assert set(r.json()) == {'count', 'next', 'previous', 'results'}; assert all(item['author']['username'] and isinstance(item['tags'], list) for item in r.json()['results']); bad=c.get('/api/v1/blog/posts/?page=0'); assert bad.status_code == 400; missing=c.get('/api/v1/blog/posts/?page=999999'); assert missing.status_code == 404; print('blog listing contract passed')"
 ```
+
+For populated data, also request a known published slug at
+`/api/v1/blog/posts/<slug>/` and assert the `body` field is present. Request
+`/api/v1/blog/tags/` and
+`/api/v1/blog/posts/?tag=<published-tag-slug>` to verify tag navigation and
+filtering. A draft or unknown slug must return HTTP 404.
 
 ## Repeatable local verification
 
