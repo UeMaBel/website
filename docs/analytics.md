@@ -114,6 +114,9 @@ healthcheck. Measure resource use locally and set limits without assuming a RAM
 minimum that upstream has not established here. Validate runtime/DB versions and
 migrations against the selected release before pinning. Source:
 [tagged Compose](https://github.com/umami-software/umami/blob/v3.4.1/docker-compose.yml).
+See [the independent local stack and update guide](analytics-stack.md) for the
+immutable image digest, proxy hostname, isolated storage, secret setup, update,
+and retention procedure.
 
 ### Public client integration (54–55)
 
