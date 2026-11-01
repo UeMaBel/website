@@ -73,6 +73,12 @@ class UploadedMedia(models.Model):
             self.kind = media_type(self.file)
         except ValidationError as error:
             raise ValidationError({'file': error.messages}) from error
+        if self.pk:
+            original_kind = type(self).objects.filter(pk=self.pk).values_list('kind', flat=True).first()
+            if original_kind is not None and self.kind != original_kind:
+                raise ValidationError({
+                    'file': 'Replacement must keep the same media kind. Create a new upload instead.',
+                })
         if self.kind == 'image' and not self.alt_text.strip():
             raise ValidationError({'alt_text': 'Images require descriptive alternative text.'})
 
