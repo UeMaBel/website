@@ -7,33 +7,13 @@ import { getPublicSiteOrigin } from "../../../lib/public-origin";
 import { Markdown } from "../../../components/content/markdown";
 import { PageHeading } from "../../../components/content/page-heading";
 import { BlogTagLinks } from "../../../components/content/blog-tag-links";
+import { metadataDescription } from "../../../lib/metadata";
 
 type BlogPostPageProps = {
   params: Promise<{ slug: string }>;
 };
 
 const getPostForRender = cache((slug: string) => getBlogPost(slug));
-
-function metadataDescription(markdown: string, title: string): string {
-  const summary = markdown
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/[#>*_`~]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  if (!summary) {
-    return title;
-  }
-  if (summary.length <= 160) {
-    return summary;
-  }
-  return `${summary.slice(0, 157).trimEnd()}...`;
-}
 
 function formatPublishedDate(value: string): string {
   return new Intl.DateTimeFormat("en", {
@@ -51,7 +31,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     const canonicalPath = `/blog/${encodeURIComponent(post.slug)}`;
 
     return {
-      title: `${post.title} | Personal website`,
+      title: post.title,
       description,
       alternates: { canonical: canonicalPath },
       openGraph: {
@@ -59,15 +39,17 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         title: post.title,
         description,
         url: new URL(canonicalPath, getPublicSiteOrigin()).toString(),
+        siteName: "Personal website",
         publishedTime: post.published_at,
         authors: [post.author.name],
         tags: post.tags.map((tag) => tag.name),
       },
+      twitter: { card: "summary", title: post.title, description },
     };
   } catch (error) {
     const title = error instanceof ApiError && error.status === 404
-      ? "Post not found | Personal website"
-      : "Blog post | Personal website";
+      ? "Post not found"
+      : "Blog post unavailable";
 
     return {
       title,

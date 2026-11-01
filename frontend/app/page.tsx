@@ -4,6 +4,13 @@ import { Markdown } from "../components/content/markdown";
 import { PageHeading } from "../components/content/page-heading";
 import { ProfileContactLinks } from "../components/content/profile-contact-links";
 import { getProfile } from "../lib/api";
+import { publicPageMetadata } from "../lib/metadata";
+
+export const metadata = publicPageMetadata(
+  "Software engineering and AI",
+  "Independent software engineering and AI expertise for teams building useful, reliable products.",
+  "/",
+);
 
 const featuredLinks = [
   { href: "/blog", label: "Read the blog" },

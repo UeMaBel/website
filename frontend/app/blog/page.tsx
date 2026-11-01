@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ApiError, getBlogPosts, getBlogTags } from "../../lib/api";
 import { PageHeading } from "../../components/content/page-heading";
 import { BlogTagLinks } from "../../components/content/blog-tag-links";
+import { publicPageMetadata } from "../../lib/metadata";
 
 const PAGE_SIZE = 10;
 
@@ -9,6 +10,23 @@ type BlogSearchParams = Promise<{
   page?: string | string[];
   tag?: string | string[];
 }>;
+
+export async function generateMetadata({ searchParams }: { searchParams: BlogSearchParams }) {
+  const params = await searchParams;
+  const requestedPage = typeof params.page === "string" ? Number(params.page) : 1;
+  const page = Number.isSafeInteger(requestedPage) && requestedPage > 1 ? requestedPage : undefined;
+  const tag = typeof params.tag === "string" ? params.tag.trim() : "";
+  const query = new URLSearchParams();
+  if (page) query.set("page", String(page));
+  if (tag) query.set("tag", tag);
+
+  const path = query.size > 0 ? `/blog?${query.toString()}` : "/blog";
+  const title = tag ? `Blog: ${tag}` : "Blog";
+  const description = tag
+    ? `Technical writing tagged ${tag}, covering software engineering, AI, and independent work.`
+    : "Technical writing on software engineering, AI, and independent work.";
+  return publicPageMetadata(title, description, path);
+}
 
 function pageNumber(value: string | string[] | undefined): number {
   if (typeof value !== "string") {

@@ -3,10 +3,42 @@ import { notFound } from "next/navigation";
 import { Markdown } from "../../../components/content/markdown";
 import { PageHeading } from "../../../components/content/page-heading";
 import { ApiError, getProject } from "../../../lib/api";
+import { metadataDescription } from "../../../lib/metadata";
+import type { Metadata } from "next";
 
 type ProjectPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const project = await getProject(slug);
+    const canonical = `/projects/${encodeURIComponent(project.slug)}`;
+    const description = metadataDescription(
+      [project.problem, project.contribution, project.description].filter(Boolean).join(" "),
+      project.title,
+    );
+    return {
+      title: project.title,
+      description,
+      alternates: { canonical },
+      openGraph: {
+        type: "website",
+        title: project.title,
+        description,
+        url: canonical,
+        siteName: "Personal website",
+      },
+      twitter: { card: "summary", title: project.title, description },
+    };
+  } catch (error) {
+    return {
+      title: error instanceof ApiError && error.status === 404 ? "Project not found" : "Project unavailable",
+      robots: { index: false, follow: false },
+    };
+  }
+}
 
 function mediaUrl(path: string): string | undefined {
   const backendOrigin = process.env.BACKEND_API_URL?.trim() || "http://127.0.0.1:8000";
