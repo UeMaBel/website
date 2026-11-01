@@ -71,6 +71,26 @@ Enter moves focus to main content. Tab through navigation links and confirm a
 visible outline. Repeat at a narrow viewport with enlarged text. In browser devtools,
 check a long code line scrolls inside its block rather than widening the page.
 
+## Markdown content
+
+Compose `<Markdown source={body} />` from `components/content/markdown.tsx` in
+server-rendered content routes. It supports CommonMark headings, links, images,
+inline code, and fenced code. Code regions are named and keyboard focusable; the
+shared stylesheet keeps wide lines inside a horizontally scrollable block.
+
+Raw HTML is skipped. The renderer retains `react-markdown`'s default safe URL
+transform and does not load raw-HTML or HTML-generating plugins. Unsafe URL
+schemes produce no active link or media. Images must have nonblank descriptive
+alt text (`![Description](/media/image.png)`); otherwise a visible authoring notice
+replaces the image. Blocked image URLs show their alt text as unavailable content.
+Uploaded images use native lazy-loaded images because Markdown has no intrinsic
+dimensions; uploaded-media safety is enforced by the backend/proxy tickets.
+
+The focused renderer tests cover supported content, literal fenced code, raw HTML,
+executable/obfuscated URL schemes, missing alt text, blocked images, and empty input.
+Security defaults follow the [react-markdown security guidance](https://github.com/remarkjs/react-markdown#security).
+Do not replace its URL transform with an identity function or enable raw HTML.
+
 Version sources: [Node.js release support](https://nodejs.org/en/about/previous-releases),
 [Next.js support policy](https://nextjs.org/support-policy), and the npm registry.
 Next.js 16.4.3 includes the fixes described in the
