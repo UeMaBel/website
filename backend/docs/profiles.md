@@ -2,9 +2,9 @@
 
 The `profiles` app stores one owner's About/CV. `Profile` has a fixed key of 1,
 enforced by PostgreSQL, and optional display name, Markdown biography, email,
-and uploaded CV reference. An empty profile is valid; API ticket 21 defines its
-public empty state. Edit the persisted profile instance; a second record fails
-validation.
+and uploaded CV reference. An empty profile is valid; the public representation
+for both missing and empty profiles is documented in the API contract. Edit the
+persisted profile instance; a second record fails validation.
 
 CV selection accepts only uploaded PDFs, validated on profile save. Referenced
 uploads are protected from deletion. Clearing the optional link retains the file.

@@ -20,6 +20,58 @@ HTTP 405 and `Allow: GET, HEAD`; the framework's response body is empty.
 Invalid paths return HTTP 404 using Django's standard error response. Configure
 `DJANGO_DEBUG=false` outside local development to suppress Django debug pages.
 
+## Public About/CV and contact
+
+`GET /api/v1/profile/` is public and accepts no query parameters. It returns the
+owner's display name, Markdown biography, contact email and links, optional CV
+URL, experience, education, and skills. Structured entries are ordered by
+`position`, then primary key. Dates use `YYYY-MM-DD`; open-ended entries have a
+null `end_date`. Markdown values are returned as source text for safe frontend
+rendering. `cv_url` is the media URL returned by the configured file
+storage, or `null` when no CV is attached.
+
+The endpoint always returns the same fields. If the owner profile does not
+exist, text fields are empty strings, `cv_url` is `null`, and every collection
+is an empty array. A saved but otherwise empty profile has the same public
+representation.
+
+Example response:
+
+```json
+{
+  "display_name": "Site Owner",
+  "biography": "Experienced engineer.\n\nFocused on AI systems.",
+  "email": "hello@example.test",
+  "cv_url": "/media/uploads/cv.pdf",
+  "experience": [
+    {
+      "position": 0,
+      "employer": "Example Co",
+      "role": "Software Engineer",
+      "start_date": "2022-01-01",
+      "end_date": null,
+      "description": "Built production systems."
+    }
+  ],
+  "education": [],
+  "skills": [{"position": 0, "name": "Python", "category": "Languages"}],
+  "links": [{"position": 0, "label": "Professional profile", "url": "https://example.test/owner"}]
+}
+```
+
+`HEAD` is allowed and returns no body. Other methods return HTTP 405. A request
+with any query parameter returns HTTP 400 with
+`{"detail":"This endpoint does not accept query parameters."}`. Invalid paths
+use Django's standard HTTP 404 response.
+
+Run this empty-state check against a disposable clean database after migrations;
+it expects that no profile has been created yet.
+
+```sh
+uv run --frozen --env-file .env manage.py shell -c "from django.test import Client; c=Client(HTTP_HOST='localhost'); r=c.get('/api/v1/profile/'); assert r.status_code == 200 and r.headers['Content-Type'] == 'application/json'; data=r.json(); assert set(data) == {'display_name', 'biography', 'email', 'cv_url', 'experience', 'education', 'skills', 'links'}; assert data['display_name'] == data['biography'] == data['email'] == ''; assert data['cv_url'] is None and all(data[name] == [] for name in ('experience', 'education', 'skills', 'links')); assert c.head('/api/v1/profile/').content == b''; assert c.get('/api/v1/profile/?unexpected=1').status_code == 400; assert c.post('/api/v1/profile/').status_code == 405; print('profile contract passed')"
+```
+
+
 ## Public blog listing
 
 `GET /api/v1/blog/posts/` is public and accepts `page` and `page_size` query
