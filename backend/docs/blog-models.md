@@ -93,6 +93,10 @@ model permissions receive HTTP 403.
 - New posts start as drafts. The explicit **Publish selected posts** action sets
   the published state and fills a missing publication timestamp with now.
   Existing publication timestamps are retained.
+- Draft edit forms include a **Preview draft** action linking to the relative
+  same-origin frontend route `/blog/<slug>/preview`. The frontend uses the
+  existing admin session cookie; the link contains no token and creates no
+  public preview URL.
 - **Unpublish selected posts** returns them to draft, retaining the timestamp.
   These actions require change permission. A single edit form can also set
   status and publication timestamp explicitly; publishing without a timestamp
