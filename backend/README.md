@@ -71,3 +71,5 @@ libpq installation. `uv.lock` pins transitive dependencies.
 
 Production serving, hardened security settings, persistence, and deployment are
 later tickets. No hosting is provisioned here.
+
+The versioned [API contract](docs/api.md) documents endpoint behavior and smoke checks.
