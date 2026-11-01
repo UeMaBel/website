@@ -53,9 +53,11 @@ landmark and keyboard skip link, including on unknown routes.
 `components/content/` owns reusable page headings and labelled content sections.
 These are server components; routes can compose them without browser state.
 
-Home, Blog, About/CV, Projects, and Contact currently show explicitly temporary
-placeholders. Their content tickets replace these placeholders; no API contract
-or fixture content is assumed. Future blog/project details use the same root shell.
+The Blog route reads published posts, authors, and dates from the backend and
+uses query-string pagination. It shows separate empty, unavailable, and
+out-of-range page states. Home, About/CV, Projects, and Contact still show
+explicitly temporary placeholders. The blog detail route is implemented by its
+own content ticket.
 
 ## Layout verification
 

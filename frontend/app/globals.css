@@ -148,7 +148,26 @@ li + li {
   margin-bottom: 1.5rem;
 }
 
-.blog-detail-meta {
+.blog-post-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.blog-post {
+  padding-block: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.blog-post:first-child {
+  padding-block-start: 0;
+}
+
+.blog-post h2 {
+  margin-block: 0 0.75rem;
+}
+
+.blog-post-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 1rem;
@@ -180,6 +199,40 @@ li + li {
 
 .blog-back-link {
   margin-block-start: 2.5rem;
+}
+
+.blog-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-block: 2rem;
+}
+
+.blog-pagination a,
+.blog-pagination > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.25rem;
+}
+
+.blog-pagination > span {
+  color: var(--color-muted);
+}
+
+.blog-pagination-status {
+  flex: 1;
+  margin: 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.blog-notice {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
 }
 
 .skip-link {
@@ -238,6 +291,11 @@ blockquote {
 @media (max-width: 30rem) {
   .navigation {
     column-gap: 0.75rem;
+  }
+
+  .blog-pagination-status {
+    order: -1;
+    flex-basis: 100%;
   }
 
   .page-heading {
