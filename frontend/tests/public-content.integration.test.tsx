@@ -162,7 +162,7 @@ describe("public content journeys", () => {
 
     render(await AboutPage());
 
-    const cvLink = screen.getByRole("link", { name: "Download curriculum vitae as a PDF" });
+    const cvLink = screen.getByRole("link", { name: "Download CV (PDF)" });
     expect(cvLink.getAttribute("href")).toBe("/media/uploads/cv.pdf");
     expect(cvLink.hasAttribute("download")).toBe(true);
   });
