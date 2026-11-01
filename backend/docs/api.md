@@ -148,6 +148,53 @@ For populated data, also request a known published slug at
 `/api/v1/blog/posts/?tag=<published-tag-slug>` to verify tag navigation and
 filtering. A draft or unknown slug must return HTTP 404.
 
+## Public projects
+
+`GET /api/v1/projects/` returns all projects in title ascending, then primary-key
+order. It is public and does not paginate. The response has `count` and
+`results`. Each project has the same shape as its detail response:
+
+```json
+{
+  "count": 1,
+  "results": [
+    {
+      "slug": "sample-project",
+      "title": "Sample project",
+      "problem": "The problem in Markdown.",
+      "contribution": "The owner contribution in Markdown.",
+      "technologies": ["Django", "PostgreSQL"],
+      "description": "Additional Markdown details.",
+      "repository_url": "https://example.test/source",
+      "demo_url": null,
+      "images": [
+        {"position": 0, "url": "/media/uploads/project.png", "alt_text": "Project screenshot"}
+      ]
+    }
+  ]
+}
+```
+
+Markdown values are returned as source text for safe frontend rendering.
+`repository_url` and `demo_url` are absolute URLs or `null` when absent. `images`
+is always an array ordered by position, then primary key; each image includes
+its media URL, descriptive alternative text, and position. A project with no
+optional links or images returns `null` links and an empty `images` array. An
+empty project collection returns HTTP 200 with `count: 0` and empty `results`.
+
+`GET /api/v1/projects/<slug>/` returns one project in the same shape as a list
+item. A missing slug returns HTTP 404 with `{"detail":"Not found."}`. Both
+endpoints are public, accept no query parameters, allow `HEAD` without a body,
+and return HTTP 405 for other methods. Query parameters return HTTP 400 with
+`{"detail":"This endpoint does not accept query parameters."}`.
+
+Repeatable smoke check against the configured database:
+
+```sh
+uv run --frozen --env-file .env manage.py shell -c "from django.test import Client; c=Client(HTTP_HOST='localhost'); r=c.get('/api/v1/projects/'); assert r.status_code == 200 and r.headers['Content-Type'] == 'application/json'; data=r.json(); assert set(data) == {'count', 'results'} and data['count'] == len(data['results']); assert all(set(project) == {'slug', 'title', 'problem', 'contribution', 'technologies', 'description', 'repository_url', 'demo_url', 'images'} for project in data['results']); missing=c.get('/api/v1/projects/not-a-project/'); assert missing.status_code == 404 and missing.json() == {'detail': 'Not found.'}; assert c.get('/api/v1/projects/?unexpected=1').status_code == 400; print('project API contract passed')"
+```
+
+
 ## Repeatable local verification
 
 From `backend/` with the documented local `.env`:
