@@ -37,3 +37,26 @@ and call `transaction.set_rollback(True)` to discard sample rows.
 Ticket 10's drill used generated PDF bytes, temporary file storage, and rolled
 back every sample row. Dedicated regression coverage follows in ticket 12.
 Run backend tests, Ruff, migration drift and migration checks afterwards.
+
+## Administration
+
+Open About/CV under `/admin/` as active staff with Profile view/add/change
+permissions and the corresponding experience/education/skill/link permissions.
+Create the one owner profile, then edit it. The add action disappears after the
+profile exists. Biography and entry descriptions are plain Markdown fields.
+
+Edit structured entries inline; lower position numbers appear first and ties
+retain primary-key order. Use the inline delete checkbox to remove an entry.
+Manage professional contact labels/URLs in the links inline and email on the
+profile. Select a PDF previously uploaded through the uploaded-media admin;
+images are excluded from CV choices. Clear the CV dropdown to remove the link
+while keeping the upload. Changing a PDF upload to an image is rejected by the
+media replacement policy.
+
+Repeatable staff drill: create the profile with biography, email, at least one
+experience and education entry, two skills and one contact link. Attach a PDF
+and save. Reopen, reverse skill position values, edit biography/link label,
+clear the CV and save. Reopen to verify every persisted change and the new skill
+order. A second profile cannot be added. Ticket 11's HTTP drill performed these
+POSTs as a non-superuser staff account, refreshed persisted data after each
+save, and rolled back its temporary rows/files.
