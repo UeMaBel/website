@@ -148,6 +148,22 @@ For populated data, also request a known published slug at
 `/api/v1/blog/posts/?tag=<published-tag-slug>` to verify tag navigation and
 filtering. A draft or unknown slug must return HTTP 404.
 
+`GET /api/v1/blog/posts/<slug>/preview/` returns a draft post with the same
+detail fields as the public endpoint, including its Markdown `body`. Drafts
+have `published_at: null`. This endpoint requires a Django session for an
+active staff user with the `blog.view_blogpost` permission. Anonymous requests
+receive HTTP 401 with `{"detail":"Authentication required."}`; authenticated
+users who are inactive, not staff, or lack that permission receive HTTP 403
+with `{"detail":"Permission denied."}`. Missing slugs and non-draft posts
+return HTTP 404 with `{"detail":"Not found."}`. Query parameters return HTTP
+400, and methods other than GET and HEAD return HTTP 405. Responses, including
+errors, are sent with no-store cache directives. Drafts remain excluded from
+all public blog listing, detail, and tag endpoints.
+
+For example, an authenticated Django test client can request
+`/api/v1/blog/posts/<draft-slug>/preview/`. The response has the normal detail
+shape (`slug`, `title`, `published_at`, `author`, `tags`, and `body`).
+
 ## Public projects
 
 `GET /api/v1/projects/` returns all projects in title ascending, then primary-key

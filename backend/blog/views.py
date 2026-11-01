@@ -2,6 +2,7 @@ from django.core.paginator import EmptyPage, Paginator
 from django.http import JsonResponse
 from django.db.models import Count, Q
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
 from django.utils.http import urlencode
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe
@@ -35,7 +36,7 @@ def _post_data(post, include_body=False):
     data = {
         'slug': post.slug,
         'title': post.title,
-        'published_at': post.published_at.isoformat(),
+        'published_at': post.published_at.isoformat() if post.published_at else None,
         'author': {
             'username': post.author.get_username(),
             'name': full_name or post.author.get_username(),
@@ -109,6 +110,29 @@ def public_blog_detail(request, slug):
 
     post = (
         BlogPost.objects.filter(slug=slug, status=BlogPost.Status.PUBLISHED)
+        .select_related('author')
+        .prefetch_related('tags')
+        .first()
+    )
+    if post is None:
+        return JsonResponse({'detail': 'Not found.'}, status=404)
+    return JsonResponse(_post_data(post, include_body=True))
+
+
+@csrf_exempt
+@never_cache
+@require_safe
+def draft_blog_preview(request, slug):
+    """Return a draft post to active staff with permission to view posts."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'detail': 'Authentication required.'}, status=401)
+    if not request.user.is_active or not request.user.is_staff or not request.user.has_perm('blog.view_blogpost'):
+        return JsonResponse({'detail': 'Permission denied.'}, status=403)
+    if request.GET:
+        return JsonResponse({'detail': 'This endpoint does not accept query parameters.'}, status=400)
+
+    post = (
+        BlogPost.objects.filter(slug=slug, status=BlogPost.Status.DRAFT)
         .select_related('author')
         .prefetch_related('tags')
         .first()
