@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.utils import timezone
 
@@ -166,3 +167,91 @@ class PublicBlogApiTests(TestCase):
                         response = getattr(self.client, method)(path)
                         self.assertEqual(response.status_code, 405)
                         self.assertEqual(response.headers['Allow'], 'GET, HEAD')
+
+
+class DraftPreviewApiTests(TestCase):
+    def setUp(self):
+        self.user_model = get_user_model()
+        self.author = self.user_model.objects.create_user(username='owner')
+        self.draft = BlogPost.objects.create(
+            slug='private-draft', title='Private draft', author=self.author,
+            body='# Draft source',
+        )
+        self.client = Client(HTTP_HOST='localhost')
+        self.preview_url = '/api/v1/blog/posts/private-draft/preview/'
+
+    def test_anonymous_user_cannot_preview_draft(self):
+        response = self.client.get(self.preview_url)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), {'detail': 'Authentication required.'})
+        self.assertIn('no-store', response['Cache-Control'])
+
+    def test_non_staff_user_cannot_preview_draft(self):
+        user = self.user_model.objects.create_user(username='reader')
+        self.client.force_login(user)
+
+        response = self.client.get(self.preview_url)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {'detail': 'Permission denied.'})
+        self.assertIn('no-store', response['Cache-Control'])
+
+    def test_inactive_staff_user_cannot_preview_draft(self):
+        user = self.user_model.objects.create_user(
+            username='inactive-staff', is_staff=True, is_active=False,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(self.preview_url)
+
+        # Django does not restore an inactive user from the admin session.
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), {'detail': 'Authentication required.'})
+        self.assertIn('no-store', response['Cache-Control'])
+
+    def test_staff_without_post_view_permission_cannot_preview_draft(self):
+        user = self.user_model.objects.create_user(username='limited-staff', is_staff=True)
+        self.client.force_login(user)
+
+        response = self.client.get(self.preview_url)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {'detail': 'Permission denied.'})
+        self.assertIn('no-store', response['Cache-Control'])
+
+    def test_active_staff_with_post_view_permission_can_preview_draft(self):
+        user = self.user_model.objects.create_user(username='editor', is_staff=True)
+        permission = Permission.objects.get(
+            content_type__app_label='blog', codename='view_blogpost',
+        )
+        user.user_permissions.add(permission)
+        self.client.force_login(user)
+
+        response = self.client.get(self.preview_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'slug': 'private-draft',
+            'title': 'Private draft',
+            'published_at': None,
+            'author': {'username': 'owner', 'name': 'owner'},
+            'tags': [],
+            'body': '# Draft source',
+        })
+        self.assertIn('no-store', response['Cache-Control'])
+
+    def test_public_blog_endpoints_do_not_expose_drafts_or_draft_only_tags(self):
+        draft_only_tag = Tag.objects.create(name='Private topic', slug='private-topic')
+        self.draft.tags.add(draft_only_tag)
+
+        listing = self.client.get('/api/v1/blog/posts/')
+        detail = self.client.get('/api/v1/blog/posts/private-draft/')
+        tags = self.client.get('/api/v1/blog/tags/')
+
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(listing.json()['results'], [])
+        self.assertEqual(detail.status_code, 404)
+        self.assertEqual(detail.json(), {'detail': 'Not found.'})
+        self.assertEqual(tags.status_code, 200)
+        self.assertEqual(tags.json(), {'count': 0, 'results': []})
