@@ -18,10 +18,13 @@ from django.contrib import admin
 from django.urls import path
 
 from blog.views import public_blog_list
+from projects.views import public_project_detail, public_project_list
 from .views import health
 
 urlpatterns = [
     path("api/v1/health/", health, name="health"),
     path('api/v1/blog/posts/', public_blog_list, name='public-blog-list'),
+    path('api/v1/projects/', public_project_list, name='public-project-list'),
+    path('api/v1/projects/<slug:slug>/', public_project_detail, name='public-project-detail'),
     path('admin/', admin.site.urls),
 ]
