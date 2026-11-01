@@ -83,4 +83,57 @@ libpq installation. `uv.lock` pins transitive dependencies.
 Production serving, hardened security settings, persistence, and deployment are
 later tickets. No hosting is provisioned here.
 
+## Container image
+
+Build the production image from `backend/`:
+
+```sh
+docker build --target production -t personal-website-backend:local .
+```
+
+The production target uses Gunicorn, runs as UID 10001, and checks the
+service-independent `/api/v1/health/` endpoint. Mount a persistent volume at
+`/data/media`; `DJANGO_MEDIA_ROOT` can point to a different mounted directory.
+The process reads the same database and secret environment variables as a local
+installation. For example, with a local PostgreSQL server and a filled `.env`,
+start the container with:
+
+```sh
+docker volume create personal-website-media
+docker run --detach --name personal-website-backend --env-file .env \
+  --env POSTGRES_HOST=host.docker.internal \
+  --env DJANGO_MEDIA_ROOT=/data/media \
+  --publish 127.0.0.1:8000:8000 \
+  --mount type=volume,source=personal-website-media,target=/data/media \
+  personal-website-backend:local
+```
+
+For a PostgreSQL server running on the Docker host, also set
+`POSTGRES_HOST=host.docker.internal` in the container environment. Keep
+`DJANGO_DEBUG=false` and set `DJANGO_ALLOWED_HOSTS` to the intended hostnames,
+including `localhost` and `127.0.0.1` for the container health check.
+Apply migrations as a one-off command before starting the service:
+
+```sh
+docker run --rm --env-file .env --env POSTGRES_HOST=host.docker.internal \
+  personal-website-backend:local python manage.py migrate
+```
+
+For source editing, build the development target and bind-mount the working tree.
+The development server reloads when source files change. This example assumes
+the PostgreSQL server is reachable from the container at
+`host.docker.internal:5432` and `.env` contains a non-empty local secret:
+
+```sh
+docker build --target development -t personal-website-backend:dev .
+docker run --rm --env-file .env --env POSTGRES_HOST=host.docker.internal \
+  --publish 127.0.0.1:8000:8000 \
+  --mount type=bind,source="$(pwd)",target=/app \
+  --mount type=volume,source=personal-website-dev-media,target=/data/media \
+  personal-website-backend:dev
+```
+
+This dev target is for local use only. The local Compose stack and shared
+container orchestration are covered by later infrastructure tickets.
+
 The versioned [API contract](docs/api.md) documents endpoint behavior and smoke checks.
