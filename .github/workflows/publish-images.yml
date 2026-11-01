@@ -1,0 +1,36 @@
+name: Publish versioned images
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish reviewed release images
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out full history for release ancestry validation
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify semantic version tag and merged main ancestry
+        run: bash .github/scripts/verify-release-ref.sh
+
+      - name: Build images and publish to GitHub Container Registry
+        run: bash .github/scripts/build-release-images.sh
+        env:
+          PUBLISH_IMAGES: "true"
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
