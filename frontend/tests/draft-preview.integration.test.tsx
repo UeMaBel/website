@@ -153,7 +153,7 @@ describe("draft preview and public blog journeys", () => {
     expect(screen.queryByText(draft.body)).toBeNull();
 
     const metadata = await generatePublicPostMetadata({ params: Promise.resolve({ slug: draft.slug }) });
-    expect(metadata.title).toBe("Post not found | Personal website");
+    expect(metadata.title).toBe("Post not found");
     expect(metadata.robots).toEqual({ index: false, follow: false });
     expect(JSON.stringify(metadata)).not.toContain(draft.title);
     expect(JSON.stringify(metadata)).not.toContain(draft.body);
