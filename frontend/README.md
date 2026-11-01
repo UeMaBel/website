@@ -45,7 +45,7 @@ image, and neither needs credentials. The default public origin is
 `http://127.0.0.1:3000`. Set `BACKEND_API_URL` explicitly when running in a
 container because `127.0.0.1` inside the frontend container refers to that
 container. The image serves SSR on port 3000 as an unprivileged user and has a
-root-page health check.
+backend-independent `robots.txt` health check.
 
 To run the development target with hot reload, build and start it from this
 directory:
