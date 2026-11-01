@@ -4,8 +4,8 @@ Active staff with uploaded-media add/change/view permissions manage files at
 `/admin/uploads/uploadedmedia/`. Add a title, file, and descriptive alternative
 text for images. PDFs may omit alt text. The derived kind is read-only.
 Copy the stored file URL from its admin edit page into Markdown image syntax
-with the same descriptive alt text. Rendering and safe public serving are later
-tickets; this ticket configures storage and does not expose a media route.
+with the same descriptive alt text. The local Compose proxy serves accepted
+images and PDF downloads from the persistent media volume.
 
 Accepted formats are JPEG (`.jpg`/`.jpeg`), PNG, WebP, and unencrypted PDFs with
 at least one page. Pillow verifies/decodes image bytes and requires the detected
@@ -13,7 +13,9 @@ format to match the extension. Excessive image pixel counts are rejected.
 pypdf parses PDFs in strict mode; file extensions and browser MIME declarations
 alone are insufficient. SVG, HTML, corrupt files, and unsupported extensions are
 rejected. Validation occurs in admin forms and model saves. This validation is
-not a PDF sanitizer; safe PDF serving headers are infrastructure ticket 51.
+not a PDF sanitizer. The local proxy serves media as static files, sets
+`X-Content-Type-Options: nosniff` and a restrictive content security policy, and
+sets PDF downloads to `Content-Disposition: attachment`.
 
 `DJANGO_UPLOAD_MAX_BYTES` is a positive byte limit, default 10 MiB (10485760).
 Empty and oversized files fail with field errors. Images require non-whitespace
@@ -22,10 +24,17 @@ file position so saved bytes match the upload. Files use UUID names under
 `uploads/`, retaining only the supported extension.
 
 `DJANGO_MEDIA_ROOT` selects filesystem storage, default `backend/media/`
-(ignored by Git); `DJANGO_MEDIA_URL` defaults to `/media/`. Point the root at a
-persistent volume in infrastructure configuration. Existing files are retained
-when records are deleted or replaced, preventing accidental deletion of files
-still referenced in Markdown; orphan cleanup is an operator task.
+(ignored by Git); `DJANGO_MEDIA_URL` defaults to `/media/`. The local Compose
+stack mounts this directory on a persistent volume and mounts the same volume
+read-only in Caddy. Existing files are retained when records are deleted or
+replaced, preventing accidental deletion of files still referenced in Markdown;
+orphan cleanup is an operator task.
+
+For local Compose, Django rejects individual files over `DJANGO_UPLOAD_MAX_BYTES`
+(10 MiB by default). Caddy caps the total multipart request at
+`UPLOAD_REQUEST_MAX_SIZE` (11 MiB by default), including the form fields and
+CSRF token. When changing these values, keep the proxy ceiling above the file
+limit to account for multipart overhead.
 
 Repeatable local staff drill:
 
