@@ -29,6 +29,18 @@ fluid content width and the framework's viewport metadata. No external fonts,
 API credentials, or running Django service are needed by this initial shell.
 Lint and automated test commands will be added in ticket 28.
 
+## Component boundaries
+
+`app/` owns route composition and metadata. `components/layout/` owns the shared
+page container, navigation, and footer. The root layout supplies the single main
+landmark and keyboard skip link, including on unknown routes.
+`components/content/` owns reusable page headings and labelled content sections.
+These are server components; routes can compose them without browser state.
+
+Home, Blog, About/CV, Projects, and Contact currently show explicitly temporary
+placeholders. Their content tickets replace these placeholders; no API contract
+or fixture content is assumed. Future blog/project details use the same root shell.
+
 Version sources: [Node.js release support](https://nodejs.org/en/about/previous-releases),
 [Next.js support policy](https://nextjs.org/support-policy), and the npm registry.
 Next.js 16.4.3 includes the fixes described in the

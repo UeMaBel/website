@@ -3,6 +3,9 @@
 }
 
 body {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   margin: 0;
   color: #202020;
   background: #faf9f6;
@@ -10,8 +13,33 @@ body {
   line-height: 1.6;
 }
 
-main {
+.page-container {
   max-width: 48rem;
   margin: 0 auto;
   padding: 2rem 1.25rem;
+}
+
+main {
+  flex: 1;
+}
+
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.skip-link {
+  position: absolute;
+  top: -10rem;
+  left: 1rem;
+  padding: 0.5rem;
+  background: white;
+}
+
+.skip-link:focus {
+  top: 0;
 }
