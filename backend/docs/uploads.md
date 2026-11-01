@@ -51,3 +51,5 @@ image/PDF fixtures, and per-test temporary storage. Checks cover all supported
 image formats, exact stored bytes, PDF uploads without alt text, missing/blank
 image alt, malformed/mismatched/unsupported files, empty/encrypted PDFs, exact
 size boundaries, invalid replacements, and unauthorized staff uploads.
+
+Existing uploads keep their media kind: replace PDFs with PDFs and images with supported images. Cross-kind replacement shows a file error; create a separate upload instead. This preserves CV references while allowing same-kind content updates.

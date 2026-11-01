@@ -122,3 +122,45 @@ class MediaUploadTests(TestCase):
         self.client.force_login(staff)
         self.assertEqual(self.upload('forbidden.png', self.image_bytes()).status_code, 403)
         self.assertFalse(UploadedMedia.objects.exists())
+
+    def test_kind_changing_replacement_is_rejected_and_preserves_cv_reference(self):
+        from profiles.models import Profile
+
+        self.upload('cv.pdf', self.pdf_bytes(), alt='')
+        cv = UploadedMedia.objects.get(title='cv.pdf')
+        profile = Profile.objects.create(cv=cv)
+        self.upload('image.png', self.image_bytes())
+        image = UploadedMedia.objects.get(title='image.png')
+        for media, filename, content in (
+            (cv, 'replacement.png', self.image_bytes()),
+            (image, 'replacement.pdf', self.pdf_bytes()),
+        ):
+            with self.subTest(original_kind=media.kind):
+                original_name = media.file.name
+                response = self.client.post(f'/admin/uploads/uploadedmedia/{media.pk}/change/', {
+                    'title': media.title, 'file': SimpleUploadedFile(filename, content),
+                    'alt_text': 'Replacement description', '_save': 'Save',
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertIn('file', response.context['adminform'].form.errors)
+                media.refresh_from_db()
+                self.assertEqual(media.file.name, original_name)
+        profile.refresh_from_db()
+        self.assertEqual(profile.cv.kind, 'pdf')
+
+    def test_same_kind_replacement_remains_allowed(self):
+        for filename, original, replacement_name, replacement in (
+            ('same.pdf', self.pdf_bytes(), 'new.pdf', self.pdf_bytes(pages=2)),
+            ('same.png', self.image_bytes(), 'new.jpg', self.image_bytes('JPEG')),
+        ):
+            with self.subTest(filename=filename):
+                self.upload(filename, original)
+                media = UploadedMedia.objects.get(title=filename)
+                response = self.client.post(f'/admin/uploads/uploadedmedia/{media.pk}/change/', {
+                    'title': media.title, 'file': SimpleUploadedFile(replacement_name, replacement),
+                    'alt_text': 'Updated description', '_save': 'Save',
+                })
+                self.assertEqual(response.status_code, 302)
+                media.refresh_from_db()
+                with media.file.open('rb') as stored:
+                    self.assertEqual(stored.read(), replacement)
