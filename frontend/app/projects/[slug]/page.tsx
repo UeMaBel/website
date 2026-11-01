@@ -4,6 +4,7 @@ import { Markdown } from "../../../components/content/markdown";
 import { PageHeading } from "../../../components/content/page-heading";
 import { ApiError, getProject } from "../../../lib/api";
 import { metadataDescription } from "../../../lib/metadata";
+import { OutboundAnchor } from "../../../components/analytics/outbound-anchor";
 import type { Metadata } from "next";
 
 type ProjectPageProps = {
@@ -117,10 +118,24 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
         {(project.repository_url || project.demo_url) && (
           <nav className="project-detail-links" aria-label="Project links">
             {project.repository_url && (
-              <a href={project.repository_url} target="_blank" rel="noreferrer">Source repository</a>
+              <OutboundAnchor
+                href={project.repository_url}
+                target="_blank"
+                rel="noreferrer"
+                category="repository"
+              >
+                Source repository
+              </OutboundAnchor>
             )}
             {project.demo_url && (
-              <a href={project.demo_url} target="_blank" rel="noreferrer">Live demo</a>
+              <OutboundAnchor
+                href={project.demo_url}
+                target="_blank"
+                rel="noreferrer"
+                category="demo"
+              >
+                Live demo
+              </OutboundAnchor>
             )}
           </nav>
         )}

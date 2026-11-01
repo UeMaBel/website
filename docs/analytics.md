@@ -165,7 +165,68 @@ public pathname and none for query/hash changes or the draft preview route.
 Inspect that the JSON contains only `website`, `hostname`, `url`, `title`, and
 an optional sanitized `referrer`. Remove the settings or set
 `UMAMI_ENABLED=false` to disable tracking.
-The automated regression checks run with `cd frontend; npm test -- analytics`.
+Outbound anchors send `name="outbound_interest"` and one fixed `data.category`:
+`contact_email`, `contact_profile`, `repository`, or `demo`. Contact categories
+measure interest only; they do not represent an enquiry. The event contains no
+address, destination URL, or link label. Build it as an explicit custom payload
+so Umami's default screen/language and other browser fields are omitted.
+Ordinary anchor navigation is never prevented or delayed, and tracking failures
+are ignored.
+
+### Verify reports and failure isolation
+
+Use a disposable local Umami website ID and synthetic visits. In Umami, select
+the same date range for each report:
+
+- Overview shows aggregate pageviews.
+- The Referrers breakdown shows external source origins when the browser sends a
+  referrer; browsers may suppress it.
+- The Pages/path breakdown ranks public paths. Blog articles use the generic
+  `Blog article` title, so group them by `/blog/<slug>` path.
+- Events shows `outbound_interest`; its Properties tab groups counts by
+  `category`. Expect `contact_email`, `contact_profile`, `repository`, and
+  `demo`. Contact categories measure interest, not enquiries.
+
+For a local browser smoke, start the local analytics stack from
+[`analytics-stack.md`](analytics-stack.md), create a synthetic website there,
+and configure the local frontend with its website ID and
+`UMAMI_SCRIPT_URL=http://analytics.localhost:3000/script.js` (use the configured
+local proxy port). Navigate between public routes and use back/forward, then
+click all four outbound link categories. Confirm the reports above and inspect
+requests for path-only URLs, sanitized referrer origins, generic titles, and
+only the fixed event category. No production ID or content belongs in this
+check.
+
+The automated failure drill runs:
+
+```powershell
+cd frontend
+npm test -- components/analytics/page-view-tracker.test.tsx components/content/profile-contact-links.test.tsx lib/analytics.test.ts
+```
+
+It covers script load failure, rejected and never-settling tracker calls, and
+email anchors that remain ordinary usable links. Repeat the browser smoke with
+analytics blocked, then with the analytics stack stopped; pages and outbound
+links must still work. The website Compose project has no Umami dependency, and
+analytics runs in its own project, so stopping it does not change website
+startup or health.
+
+On 2026-11-01, a disposable Umami v3.4.1/PostgreSQL stack accepted five
+synthetic pageviews and four `outbound_interest` events. Its authenticated local
+reports returned 5 aggregate pageviews, `/blog/synthetic-alpha` ranked at 3
+visitors ahead of the other paths at 1 each, the two external referrer origins,
+and exactly one value for each of the four categories. `/script.js` and
+`/api/heartbeat` returned 200. The temporary site and database volume were
+removed after verification.
+
+In the same local smoke, click the email and professional profile links and a
+project's repository and demo links. The Network panel should show the event
+name, one category, and minimal public page context in each payload, with no
+address, destination URL, or link label. Then stop or block analytics and
+repeat: email links should still open the mail client and
+profile/repository/demo anchors should still open their
+normal destinations. The complete frontend regression suite runs with
+`cd frontend; npm test`.
 
 Emit a minimal page payload with `website`, `hostname`, public `url`, generic
 `title`, and sanitized `referrer`. Click events add `name="outbound_interest"`

@@ -4,6 +4,7 @@ import {
   getUmamiScriptUrl,
   isPublicAnalyticsPath,
   sanitizeExternalReferrer,
+  sendOutboundInterest,
   sendPageView,
 } from "./analytics";
 
@@ -93,4 +94,62 @@ test("sends tracking without propagating synchronous or asynchronous failures", 
     url: "/",
     title: "Home",
   })).not.toThrow();
+});
+
+test("does not wait for tracker requests that never settle", () => {
+  const pending = new Promise<void>(() => {});
+  const tracker = {
+    getSession: () => ({ website: "synthetic-website" }),
+    track: vi.fn(() => pending),
+  };
+
+  expect(() => sendPageView(tracker, {
+    website: "synthetic-website",
+    hostname: "site.example",
+    url: "/",
+    title: "Home",
+  })).not.toThrow();
+  expect(() => sendOutboundInterest(tracker, "contact_email")).not.toThrow();
+  expect(tracker.track).toHaveBeenCalledTimes(2);
+});
+
+test.each(["contact_email", "contact_profile", "repository", "demo"] as const)(
+  "sends a minimal outbound-interest payload for category %s",
+  (category) => {
+    const track = vi.fn().mockResolvedValue(undefined);
+    const tracker = { getSession: () => ({ website: "synthetic-website" }), track };
+    window.history.replaceState({}, "", "/projects/public-project?email=private#private-fragment");
+    sendOutboundInterest(tracker, category);
+    expect(track).toHaveBeenCalledOnce();
+    expect(track).toHaveBeenCalledWith({
+      website: "synthetic-website",
+      hostname: window.location.hostname,
+      url: "/projects/public-project",
+      title: "Project",
+      name: "outbound_interest",
+      data: { category },
+    });
+    expect(JSON.stringify(track.mock.calls)).not.toContain("mailto:");
+    expect(JSON.stringify(track.mock.calls)).not.toContain("private");
+    window.history.replaceState({}, "", "/");
+  },
+);
+
+test("outbound tracking failure is fire-and-forget", async () => {
+  const rejectedTracker = {
+    getSession: () => ({ website: "synthetic-website" }),
+    track: vi.fn().mockRejectedValue(new Error("offline")),
+  };
+  expect(() => sendOutboundInterest(rejectedTracker, "contact_email")).not.toThrow();
+  await Promise.resolve();
+  expect(rejectedTracker.track).toHaveBeenCalledWith(expect.objectContaining({
+    name: "outbound_interest",
+    data: { category: "contact_email" },
+  }));
+
+  const throwingTracker = {
+    getSession: () => ({ website: "synthetic-website" }),
+    track: vi.fn(() => { throw new Error("blocked"); }),
+  };
+  expect(() => sendOutboundInterest(throwingTracker, "demo")).not.toThrow();
 });
