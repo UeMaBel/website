@@ -116,6 +116,15 @@ and projects return a collection or one project. Markdown fields remain source
 text for the safe renderer. A 404 remains an `ApiError` with `code === "http"`
 and `status === 404`, allowing a server page to map missing content to a 404.
 
+## Search and sharing metadata
+
+Public routes provide canonical URLs, descriptions, and Open Graph/Twitter
+metadata. Set `SITE_URL` to the deployed website's absolute HTTP(S) origin so
+canonical links and `sitemap.xml` use the public host. It defaults to
+`http://localhost:3000` for local development. The sitemap reads only published
+blog listings and public projects; draft preview URLs are excluded and
+`robots.txt` disallows crawling them.
+
 Version sources: [Node.js release support](https://nodejs.org/en/about/previous-releases),
 [Next.js support policy](https://nextjs.org/support-policy), and the npm registry.
 Next.js 16.4.3 includes the fixes described in the

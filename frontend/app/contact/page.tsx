@@ -2,6 +2,13 @@ import { ContentSection } from "../../components/content/content-section";
 import { PageHeading } from "../../components/content/page-heading";
 import { ProfileContactLinks } from "../../components/content/profile-contact-links";
 import { getProfile } from "../../lib/api";
+import { publicPageMetadata } from "../../lib/metadata";
+
+export const metadata = publicPageMetadata(
+  "Contact",
+  "Get in touch about independent software engineering, AI, and collaboration.",
+  "/contact",
+);
 
 export default async function ContactPage() {
   try {
