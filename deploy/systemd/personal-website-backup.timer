@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the encrypted personal website backup daily
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=personal-website-backup.service
+
+[Install]
+WantedBy=timers.target
