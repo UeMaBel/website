@@ -57,6 +57,20 @@ Home, Blog, About/CV, Projects, and Contact currently show explicitly temporary
 placeholders. Their content tickets replace these placeholders; no API contract
 or fixture content is assumed. Future blog/project details use the same root shell.
 
+## Layout verification
+
+The shared shell uses system fonts, a restrained light palette, and a 48rem content
+container. Navigation wraps into visible rows on mobile with at least 44px touch
+targets; it does not require JavaScript to expose links. Headings and spacing scale
+with the viewport. Long links wrap; code blocks scroll within the content column.
+
+For a browser smoke check, run the production server and visit the public routes
+at 320px, 768px, and 1440px widths, plus `/missing` for the 404 shell. Confirm no
+horizontal page overflow. Tab from the top: the visible skip link should be first;
+Enter moves focus to main content. Tab through navigation links and confirm a
+visible outline. Repeat at a narrow viewport with enlarged text. In browser devtools,
+check a long code line scrolls inside its block rather than widening the page.
+
 Version sources: [Node.js release support](https://nodejs.org/en/about/previous-releases),
 [Next.js support policy](https://nextjs.org/support-policy), and the npm registry.
 Next.js 16.4.3 includes the fixes described in the
