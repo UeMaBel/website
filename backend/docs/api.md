@@ -148,6 +148,12 @@ For populated data, also request a known published slug at
 `/api/v1/blog/posts/?tag=<published-tag-slug>` to verify tag navigation and
 filtering. A draft or unknown slug must return HTTP 404.
 
+Run the focused PostgreSQL-backed regression suite from `backend/` with:
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_blog_api
+```
+
 ## Repeatable local verification
 
 From `backend/` with the documented local `.env`:
