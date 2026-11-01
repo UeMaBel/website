@@ -1,0 +1,167 @@
+name: personal-website-production
+
+services:
+  db:
+    image: postgres:17.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the protected production environment file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the protected production environment file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the protected production environment file}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging: &default-logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  backend:
+    build:
+      context: ./backend
+      target: production
+    restart: unless-stopped
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in the protected production environment file}
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: ${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}
+      DJANGO_TRUST_X_FORWARDED_PROTO: "true"
+      DJANGO_SECURE_SSL_REDIRECT: "true"
+      DJANGO_SESSION_COOKIE_SECURE: "true"
+      DJANGO_CSRF_COOKIE_SECURE: "true"
+      DJANGO_CSRF_TRUSTED_ORIGINS: https://${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}
+      DJANGO_SECURE_HSTS_SECONDS: "31536000"
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the protected production environment file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the protected production environment file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the protected production environment file}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      DJANGO_MEDIA_ROOT: /data/media
+    command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn --bind=0.0.0.0:8000 --workers=2 --access-logfile=- --error-logfile=- config.wsgi:application"]
+    volumes:
+      - media_data:/data/media
+    networks:
+      - database
+      - application
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; response = urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=2); exit(0 if response.status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    restart: unless-stopped
+    environment:
+      BACKEND_API_ORIGIN: http://backend:8000
+      PUBLIC_SITE_ORIGIN: https://${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}
+    networks:
+      - application
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/robots.txt', {signal: AbortSignal.timeout(2000)}).then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 768M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  proxy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - application
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.10"
+          memory: 64M
+
+configs:
+  caddyfile:
+    content: |
+      ${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file} {
+        encode zstd gzip
+        @django path /api/* /admin /admin/* /static/* /media/*
+        handle @django {
+          reverse_proxy backend:8000
+        }
+        handle {
+          reverse_proxy frontend:3000
+        }
+      }
+
+networks:
+  database:
+    internal: true
+  application:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  media_data:
+  caddy_data:
+  caddy_config:
