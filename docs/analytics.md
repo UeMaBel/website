@@ -165,7 +165,22 @@ public pathname and none for query/hash changes or the draft preview route.
 Inspect that the JSON contains only `website`, `hostname`, `url`, `title`, and
 an optional sanitized `referrer`. Remove the settings or set
 `UMAMI_ENABLED=false` to disable tracking.
-The automated regression checks run with `cd frontend; npm test -- analytics`.
+Outbound anchors send `name="outbound_interest"` and one fixed `data.category`:
+`contact_email`, `contact_profile`, `repository`, or `demo`. Contact categories
+measure interest only; they do not represent an enquiry. The event contains no
+address, destination URL, or link label. Build it as an explicit custom payload
+so Umami's default screen/language and other browser fields are omitted.
+Ordinary anchor navigation is never prevented or delayed, and tracking failures
+are ignored.
+
+In the same local smoke, click the email and professional profile links and a
+project's repository and demo links. The Network panel should show the event
+name, one category, and minimal public page context in each payload, with no
+address, destination URL, or link label. Then stop or block analytics and
+repeat: email links should still open the mail client and
+profile/repository/demo anchors should still open their
+normal destinations. The complete frontend regression suite runs with
+`cd frontend; npm test`.
 
 Emit a minimal page payload with `website`, `hostname`, public `url`, generic
 `title`, and sanitized `referrer`. Click events add `name="outbound_interest"`
