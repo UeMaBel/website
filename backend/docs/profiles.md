@@ -60,3 +60,15 @@ clear the CV and save. Reopen to verify every persisted change and the new skill
 order. A second profile cannot be added. Ticket 11's HTTP drill performed these
 POSTs as a non-superuser staff account, refreshed persisted data after each
 save, and rolled back its temporary rows/files.
+
+## Focused regression checks
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_profiles
+```
+
+These tests use isolated PostgreSQL rows and temporary file storage. They verify
+persisted biography/contact edits, empty content, ordered experience/education/
+skills/links including deterministic ties and reordering, structured dates and
+Markdown, optional PDF attachment/removal, protected uploads, rejection of image
+or missing CV references, singleton ownership, and invalid contact values.
