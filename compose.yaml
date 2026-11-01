@@ -45,8 +45,6 @@ services:
         condition: service_healthy
     volumes:
       - media_data:/data/media
-    ports:
-      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     healthcheck:
       test:
         - CMD
@@ -73,10 +71,34 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    ports:
-      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     networks:
       - frontend
+
+  proxy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      demo:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${PROXY_PORT:-3000}:80"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - frontend
+      - demo_proxy
+
+  demo:
+    image: nginx:1.29.4-alpine
+    restart: unless-stopped
+    volumes:
+      - ./demo:/usr/share/nginx/html:ro
+    networks:
+      - demo_proxy
 
 volumes:
   postgres_data:
@@ -84,5 +106,6 @@ volumes:
 
 networks:
   frontend:
+  demo_proxy:
   database:
     internal: true
