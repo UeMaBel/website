@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { ApiError, getBlogPosts } from "../../lib/api";
+import { ApiError, getBlogPosts, getBlogTags } from "../../lib/api";
 import { PageHeading } from "../../components/content/page-heading";
+import { BlogTagLinks } from "../../components/content/blog-tag-links";
 
 const PAGE_SIZE = 10;
 
 type BlogSearchParams = Promise<{
   page?: string | string[];
+  tag?: string | string[];
 }>;
 
 function pageNumber(value: string | string[] | undefined): number {
@@ -24,9 +26,10 @@ function formatPublishedDate(value: string): string {
   }).format(new Date(value));
 }
 
-function unavailableMessage(error: unknown): string {
+function unavailableMessage(error: unknown, activeTag?: string, knownTag = false): string {
   if (error instanceof ApiError && error.status === 404) {
-    return "There are no posts on this page.";
+    if (activeTag && !knownTag) return "This tag was not found.";
+    return activeTag ? "There are no posts with this tag on this page." : "There are no posts on this page.";
   }
   return "Blog posts are temporarily unavailable. Please try again later.";
 }
@@ -36,21 +39,41 @@ export default async function BlogPage({
 }: {
   searchParams: BlogSearchParams;
 }) {
-  const currentPage = pageNumber((await searchParams).page);
+  const params = await searchParams;
+  const currentPage = pageNumber(params.page);
+  const requestedTag = typeof params.tag === "string" ? params.tag.trim() : "";
+  const activeTag = requestedTag || undefined;
+  const tagsResult = await getBlogTags().then(
+    (value) => ({ value, error: undefined }),
+    (error: unknown) => ({ value: undefined, error }),
+  );
+  const tags = tagsResult.value?.results ?? [];
+  const selectedTag = tags.find((tag) => tag.slug === activeTag);
 
   try {
-    const posts = await getBlogPosts({ page: currentPage, pageSize: PAGE_SIZE });
+    const posts = await getBlogPosts({ page: currentPage, pageSize: PAGE_SIZE, tag: activeTag });
     const pageCount = Math.ceil(posts.count / PAGE_SIZE);
 
     return (
       <>
-        <PageHeading title="Blog">
+        <PageHeading title={selectedTag ? `Blog: ${selectedTag.name}` : "Blog"}>
           <p>Technical writing on software engineering, AI, and independent work.</p>
         </PageHeading>
 
+        {activeTag && (
+          <p className="blog-active-tag" role="status">
+            Showing posts tagged <strong>{selectedTag?.name ?? activeTag}</strong>.{" "}
+            <Link href="/blog">Clear tag filter</Link>
+          </p>
+        )}
+        {tags.length > 0 && <BlogTagLinks tags={tags} activeTag={activeTag} />}
+        {tagsResult.error && (
+          <p className="blog-tag-unavailable" role="status">Tag navigation is temporarily unavailable.</p>
+        )}
+
         {posts.results.length === 0 ? (
           <p className="blog-notice" role="status">
-            No posts have been published yet.
+            {activeTag ? `No published posts are available for “${selectedTag?.name ?? activeTag}”.` : "No posts have been published yet."}
           </p>
         ) : (
           <>
@@ -75,7 +98,7 @@ export default async function BlogPage({
             {pageCount > 1 && (
               <nav className="blog-pagination" aria-label="Blog pages">
                 {posts.previous ? (
-                  <Link href={`/blog?page=${currentPage - 1}`}>Previous page</Link>
+                  <Link href={blogUrl(currentPage - 1, activeTag)}>Previous page</Link>
                 ) : (
                   <span aria-disabled="true">Previous page</span>
                 )}
@@ -83,7 +106,7 @@ export default async function BlogPage({
                   Page {currentPage} of {pageCount}
                 </p>
                 {posts.next ? (
-                  <Link href={`/blog?page=${currentPage + 1}`}>Next page</Link>
+                  <Link href={blogUrl(currentPage + 1, activeTag)}>Next page</Link>
                 ) : (
                   <span aria-disabled="true">Next page</span>
                 )}
@@ -96,16 +119,31 @@ export default async function BlogPage({
   } catch (error) {
     return (
       <>
-        <PageHeading title="Blog" />
+        <PageHeading title={selectedTag ? `Blog: ${selectedTag.name}` : "Blog"} />
+        {activeTag && (
+          <p className="blog-active-tag" role="status">
+            Showing posts tagged <strong>{selectedTag?.name ?? activeTag}</strong>.{" "}
+            <Link href="/blog">Clear tag filter</Link>
+          </p>
+        )}
+        {tags.length > 0 && <BlogTagLinks tags={tags} activeTag={activeTag} />}
         <p className="blog-notice" role="alert">
-          {unavailableMessage(error)}
+          {unavailableMessage(error, activeTag, Boolean(selectedTag))}
         </p>
         {error instanceof ApiError && error.status === 404 && (
           <p>
-            <Link href="/blog">Return to the first page</Link>
+            <Link href={activeTag ? blogUrl(1, activeTag) : "/blog"}>
+              {activeTag && !selectedTag ? "Browse all posts" : "Return to the first page"}
+            </Link>
           </p>
         )}
       </>
     );
   }
+}
+
+function blogUrl(page: number, tag?: string): string {
+  const query = new URLSearchParams({ page: String(page) });
+  if (tag) query.set("tag", tag);
+  return `/blog?${query.toString()}`;
 }

@@ -185,6 +185,44 @@ li + li {
   list-style: none;
 }
 
+.blog-tags {
+  margin-block: 1.5rem;
+}
+
+.blog-tags > p {
+  margin-block: 0 0.5rem;
+  font-weight: 600;
+}
+
+.blog-tags > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.blog-tags a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+}
+
+.blog-tags a[aria-current="page"] {
+  color: var(--color-paper);
+  background: var(--color-ink);
+  text-decoration: none;
+}
+
+.blog-active-tag,
+.blog-tag-unavailable {
+  margin-block: 1rem;
+}
+
 .blog-article .blog-detail-tags > li {
   padding: 0.15rem 0.6rem;
   border: 1px solid var(--color-border);
