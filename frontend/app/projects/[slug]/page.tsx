@@ -5,6 +5,7 @@ import { PageHeading } from "../../../components/content/page-heading";
 import { ApiError, getProject } from "../../../lib/api";
 import { metadataDescription } from "../../../lib/metadata";
 import { OutboundAnchor } from "../../../components/analytics/outbound-anchor";
+import { getPublicSiteOrigin } from "../../../lib/public-origin";
 import type { Metadata } from "next";
 
 type ProjectPageProps = {
@@ -42,13 +43,13 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
 }
 
 function mediaUrl(path: string): string | undefined {
-  const backendOrigin = process.env.BACKEND_API_URL?.trim() || "http://127.0.0.1:8000";
   try {
-    const url = new URL(path, backendOrigin);
-    if ((url.protocol !== "http:" && url.protocol !== "https:") || url.username || url.password) {
+    const publicOrigin = getPublicSiteOrigin();
+    const url = new URL(path, publicOrigin);
+    if (url.origin !== publicOrigin.origin || !url.pathname.startsWith("/media/")) {
       return undefined;
     }
-    return url.toString();
+    return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return undefined;
   }
@@ -103,7 +104,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                 return (
                   <figure key={`${image.position}-${image.url}`}>
                     {src && image.alt_text.trim() ? (
-                      // biome-ignore lint/performance/noImgElement: Project uploads use backend media URLs and need no image proxy.
+                      // biome-ignore lint/performance/noImgElement: Uploaded media is served by the same-origin proxy.
                       <img src={src} alt={image.alt_text} loading="lazy" decoding="async" />
                     ) : (
                       <p role="status">Image unavailable: {image.alt_text || "No description provided."}</p>

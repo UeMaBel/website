@@ -179,6 +179,23 @@ describe("public content journeys", () => {
     expect(screen.queryByRole("navigation", { name: "Project links" })).toBeNull();
   });
 
+  it("serves project images through the public same-origin media route", async () => {
+    vi.stubEnv("PUBLIC_SITE_ORIGIN", "https://www.example.test");
+    fetchMock.mockResolvedValue(jsonResponse(project({
+      images: [{
+        position: 0,
+        url: "/media/uploads/project-image.png",
+        alt_text: "Project diagram",
+      }],
+    })));
+
+    render(await ProjectDetailPage({ params: Promise.resolve({ slug: "sample-project" }) }));
+
+    const image = screen.getByRole("img", { name: "Project diagram" });
+    expect(image.getAttribute("src")).toBe("/media/uploads/project-image.png");
+    expect(image.getAttribute("src")).not.toContain("backend:8000");
+  });
+
   it("exposes configured repository and demo links", async () => {
     fetchMock.mockResolvedValue(jsonResponse(project({
       repository_url: "https://example.test/source",
