@@ -40,9 +40,9 @@ services:
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in the protected production environment file}
       DJANGO_DEBUG: "false"
-      DJANGO_ALLOWED_HOSTS: ${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}
+      DJANGO_ALLOWED_HOSTS: ${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file},backend
       DJANGO_TRUST_X_FORWARDED_PROTO: "true"
-      DJANGO_SECURE_SSL_REDIRECT: "true"
+      DJANGO_SECURE_SSL_REDIRECT: "false"
       DJANGO_SESSION_COOKIE_SECURE: "true"
       DJANGO_CSRF_COOKIE_SECURE: "true"
       DJANGO_CSRF_TRUSTED_ORIGINS: https://${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}
@@ -63,7 +63,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "from urllib.request import urlopen; response = urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=2); exit(0 if response.status == 200 else 1)"]
+      test: ["CMD", "python", "-c", "import os; from urllib.request import Request, urlopen; request = Request('http://127.0.0.1:8000/api/v1/health/', headers={'Host': os.environ['DJANGO_ALLOWED_HOSTS'].split(',')[0], 'X-Forwarded-Proto': 'https'}); response = urlopen(request, timeout=2); exit(0 if response.status == 200 else 1)"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -84,7 +84,7 @@ services:
       target: production
     restart: unless-stopped
     environment:
-      BACKEND_API_ORIGIN: http://backend:8000
+      BACKEND_API_URL: http://backend:8000
       PUBLIC_SITE_ORIGIN: https://${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}
     networks:
       - application

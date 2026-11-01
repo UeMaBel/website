@@ -15,11 +15,14 @@ Create a protected environment file outside this repository from
 - `POSTGRES_DB` and `POSTGRES_USER` to the chosen database and role names.
 
 The production configuration sets Django's debug mode off, trusts the
-`X-Forwarded-Proto` value from the private Caddy application network, redirects
-HTTP requests to HTTPS, marks session and CSRF cookies secure, trusts the
-configured HTTPS origin for CSRF, and enables a one-year HSTS policy. Keep
-Caddy as the only public entry point so clients cannot forge the forwarded
-scheme header to reach Django directly. Uploaded files use the persistent
+`X-Forwarded-Proto` value from Caddy, marks session and CSRF cookies secure,
+trusts the configured HTTPS origin for CSRF, and enables a one-year HSTS
+policy. Django accepts only the configured public site domain and the internal
+`backend` service name used for private frontend API requests. Caddy is the
+only published ingress and automatically redirects HTTP to HTTPS. Django's
+own redirect stays disabled so server-side frontend requests can use the
+private HTTP backend URL. Browser traffic enters through Caddy, and the
+backend has no published port. Uploaded files use the persistent
 `DJANGO_MEDIA_ROOT` volume. Django's `DJANGO_STATIC_ROOT` is configurable for
 the static file serving layer, which is documented separately.
 
@@ -67,13 +70,15 @@ database network. Django joins that network and the application network; the
 frontend and Caddy join only the application network. Only Caddy publishes
 host ports.
 
-Settings contract for the local stack: `DJANGO_STATIC_ROOT` sets the directory
+Settings contract: `DJANGO_STATIC_ROOT` sets the directory
 filled by `collectstatic`; `DJANGO_TRUST_X_FORWARDED_PROTO` enables Django's
 trusted proxy scheme handling; `DJANGO_SECURE_SSL_REDIRECT`,
 `DJANGO_SESSION_COOKIE_SECURE`, `DJANGO_CSRF_COOKIE_SECURE`,
 `DJANGO_CSRF_TRUSTED_ORIGINS`, and `DJANGO_SECURE_HSTS_SECONDS` control HTTPS
 behavior. Local HTTP setups leave these values off or unset. Production enables
-them explicitly.
+proxy trust, secure cookies, trusted origins, and HSTS; Caddy owns the public
+HTTP-to-HTTPS redirect, while Django keeps its redirect disabled for internal
+frontend-to-backend HTTP requests.
 
 ## Stop and preserve data
 
