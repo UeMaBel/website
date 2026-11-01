@@ -115,7 +115,7 @@ jobs:
           stage="$PRODUCTION_COMPOSE_DIRECTORY/.deploy-stage-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           image_owner="${IMAGE_OWNER,,}"
 
-          ssh "${ssh_options[@]}" "$target" "mkdir -m 700 -p '$stage' && test -d '$PRODUCTION_COMPOSE_DIRECTORY' && test -r '$PRODUCTION_ENV_FILE' && test -d '$PRODUCTION_BACKUP_DIRECTORY'"
+          ssh "${ssh_options[@]}" "$target" "test -d '$PRODUCTION_COMPOSE_DIRECTORY' && test -r '$PRODUCTION_ENV_FILE' && test -d '$PRODUCTION_BACKUP_DIRECTORY' && mkdir -m 700 '$stage'"
           scp "${ssh_options[@]}" compose.production.yaml "$target:$stage/compose.production.yaml"
 
           ssh "${ssh_options[@]}" "$target" bash -s -- \
@@ -164,8 +164,8 @@ jobs:
               else
                 rm -f "$current_release_file"
               fi
-            fi
-            if (( backend_stopped )); then
+              compose up --detach --no-build --wait --wait-timeout 300 || return 1
+            elif (( backend_stopped )); then
               compose up --detach --no-build --wait --wait-timeout 300 || return 1
             fi
           }
