@@ -124,6 +124,15 @@ Enter moves focus to main content. Tab through navigation links and confirm a
 visible outline. Repeat at a narrow viewport with enlarged text. In browser devtools,
 check a long code line scrolls inside its block rather than widening the page.
 
+For a repeatable browser audit, run `npm run build`, then
+`npm run test:a11y`. The test starts the built standalone server with controlled
+API fixtures and checks public routes with axe, keyboard focus, image text,
+code overflow, 320/768/1440px viewports, and 200% text enlargement. Playwright's
+bundled Chromium can be installed with `npx playwright install chromium`; set
+`CHROME_BIN` to an existing Chromium/Chrome executable to use that browser
+instead. See [`../docs/accessibility-responsive-review.md`](../docs/accessibility-responsive-review.md)
+for the recorded review and results.
+
 ## Markdown content
 
 Compose `<Markdown source={body} />` from `components/content/markdown.tsx` in

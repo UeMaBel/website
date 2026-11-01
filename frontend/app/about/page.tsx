@@ -122,7 +122,7 @@ export default async function AboutPage() {
         <ContentSection id="curriculum-vitae" title="Curriculum vitae">
           {profile.cv_url ? (
             <p>
-              <a href={profile.cv_url} download aria-label="Download curriculum vitae as a PDF">
+              <a href={profile.cv_url} download>
                 Download CV (PDF)
               </a>
             </p>
