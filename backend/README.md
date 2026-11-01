@@ -64,7 +64,8 @@ regression tests run in subprocesses without touching the database.
 
 `uv sync --frozen` includes the pinned development Ruff dependency. The lint
 command checks syntax, unused/undefined names, and core Python errors; it does
-not rewrite files. Run commands from `backend/`. CI automation is ticket 60.
+not rewrite files. Run commands from `backend/`. GitHub Actions runs the backend
+checks on pushes and pull requests using an isolated PostgreSQL service.
 [Ruff configuration](https://docs.astral.sh/ruff/configuration/) documents the
 explicit rule set in `pyproject.toml`.
 A startup smoke check with debug enabled requests `/` and expects HTTP 200 and
