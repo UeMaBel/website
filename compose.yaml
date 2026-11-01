@@ -83,6 +83,7 @@ services:
     restart: unless-stopped
     environment:
       UPLOAD_REQUEST_MAX_SIZE: ${UPLOAD_REQUEST_MAX_SIZE:-11MiB}
+      ANALYTICS_HOST: ${ANALYTICS_HOST:-analytics.localhost}
     depends_on:
       backend:
         condition: service_healthy

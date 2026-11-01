@@ -1,0 +1,69 @@
+services:
+  umami-db:
+    image: postgres:17.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${UMAMI_DB_NAME:?Set UMAMI_DB_NAME in analytics/.env}
+      POSTGRES_USER: ${UMAMI_DB_USER:?Set UMAMI_DB_USER in analytics/.env}
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?Set UMAMI_DB_PASSWORD in analytics/.env}
+    volumes:
+      - umami_database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    mem_limit: 512m
+    cpus: 0.5
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - analytics_database
+
+  umami:
+    image: ${UMAMI_IMAGE:?Set a reviewed immutable UMAMI_IMAGE in analytics/.env}
+    init: true
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${UMAMI_DB_USER:?}:${UMAMI_DB_PASSWORD:?}@umami-db:5432/${UMAMI_DB_NAME:?}
+      APP_SECRET: ${UMAMI_APP_SECRET:?Set UMAMI_APP_SECRET in analytics/.env}
+      TWO_FACTOR_ENCRYPTION_KEY: ${UMAMI_TWO_FACTOR_ENCRYPTION_KEY:?Set UMAMI_TWO_FACTOR_ENCRYPTION_KEY in analytics/.env}
+      PRIVATE_MODE: "1"
+      DISABLE_TELEMETRY: "1"
+      DISABLE_UPDATES: "1"
+      SALT_ROTATION: day
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:3000/api/heartbeat >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+    mem_limit: 768m
+    cpus: 1.0
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      analytics_database:
+      proxy:
+        aliases:
+          - umami
+
+volumes:
+  umami_database:
+
+networks:
+  analytics_database:
+    internal: true
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:?Set PROXY_NETWORK in analytics/.env}
