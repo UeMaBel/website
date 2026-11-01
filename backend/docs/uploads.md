@@ -40,5 +40,14 @@ Repeatable local staff drill:
    there. Restore configuration after the drill.
 
 Ticket 08's HTTP admin drill used a non-superuser staff account, generated PNG
-and PDF bytes, temporary storage and rolled-back database rows. Dedicated
-regression coverage follows in ticket 09.
+and PDF bytes, temporary storage and rolled-back database rows. Focused regression coverage runs with:
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_uploads
+```
+
+It uses isolated PostgreSQL rows, non-superuser staff permissions, generated
+image/PDF fixtures, and per-test temporary storage. Checks cover all supported
+image formats, exact stored bytes, PDF uploads without alt text, missing/blank
+image alt, malformed/mismatched/unsupported files, empty/encrypted PDFs, exact
+size boundaries, invalid replacements, and unauthorized staff uploads.
