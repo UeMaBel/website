@@ -96,6 +96,23 @@ test("sends tracking without propagating synchronous or asynchronous failures", 
   })).not.toThrow();
 });
 
+test("does not wait for tracker requests that never settle", () => {
+  const pending = new Promise<void>(() => {});
+  const tracker = {
+    getSession: () => ({ website: "synthetic-website" }),
+    track: vi.fn(() => pending),
+  };
+
+  expect(() => sendPageView(tracker, {
+    website: "synthetic-website",
+    hostname: "site.example",
+    url: "/",
+    title: "Home",
+  })).not.toThrow();
+  expect(() => sendOutboundInterest(tracker, "contact_email")).not.toThrow();
+  expect(tracker.track).toHaveBeenCalledTimes(2);
+});
+
 test.each(["contact_email", "contact_profile", "repository", "demo"] as const)(
   "sends a minimal outbound-interest payload for category %s",
   (category) => {

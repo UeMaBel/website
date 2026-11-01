@@ -54,3 +54,22 @@ test("keeps the email link usable when analytics rejects", async () => {
     data: { category: "contact_email" },
   }));
 });
+
+test("does not wait for an analytics request that never settles", () => {
+  const track = vi.fn(() => new Promise<void>(() => {}));
+  window.umami = { getSession: () => ({ website: "synthetic-website" }), track };
+  render(<ProfileContactLinks email="owner@example.test" links={[]} />);
+
+  const emailLink = screen.getByRole("link", { name: "owner@example.test" });
+  expect(fireEvent.click(emailLink)).toBe(true);
+  expect(emailLink.getAttribute("href")).toBe("mailto:owner@example.test");
+  expect(track).toHaveBeenCalledOnce();
+});
+
+test("keeps the email link usable when the tracker script is unavailable", () => {
+  render(<ProfileContactLinks email="owner@example.test" links={[]} />);
+
+  const emailLink = screen.getByRole("link", { name: "owner@example.test" });
+  expect(fireEvent.click(emailLink)).toBe(true);
+  expect(emailLink.getAttribute("href")).toBe("mailto:owner@example.test");
+});
