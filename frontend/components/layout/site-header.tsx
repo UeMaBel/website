@@ -11,7 +11,7 @@ const navigation = [
 
 export function SiteHeader() {
   return (
-    <header>
+    <header className="site-header">
       <PageContainer>
         <nav aria-label="Main navigation">
           <ul className="navigation">
