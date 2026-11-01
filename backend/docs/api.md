@@ -195,6 +195,12 @@ uv run --frozen --env-file .env manage.py shell -c "from django.test import Clie
 ```
 
 
+Run the focused PostgreSQL-backed regression suite from `backend/` with:
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_blog_api
+```
+
 ## Repeatable local verification
 
 From `backend/` with the documented local `.env`:
