@@ -54,5 +54,12 @@ with transaction.atomic():
     transaction.set_rollback(True)
 ```
 
-Ticket 06 adds dedicated regression coverage for invalid relationships,
-uniqueness, publishing rules, and chronological ordering.
+Run focused regression coverage with:
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_blog_models
+```
+
+This exercises PostgreSQL constraints, protected/required authors, persisted
+Markdown and tags, stable slugs, explicit publishing/unpublishing, invalid
+states, and chronological ties using isolated test data.
