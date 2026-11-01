@@ -2,6 +2,13 @@ import Link from "next/link";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
 import { getProjects } from "../../lib/api";
+import { publicPageMetadata } from "../../lib/metadata";
+
+export const metadata = publicPageMetadata(
+  "Projects",
+  "Explore software projects, the problems they address, and my contributions.",
+  "/projects",
+);
 
 export default async function ProjectsPage() {
   try {

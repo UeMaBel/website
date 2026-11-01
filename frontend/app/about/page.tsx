@@ -2,6 +2,13 @@ import { getProfile } from "../../lib/api";
 import { ContentSection } from "../../components/content/content-section";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
+import { publicPageMetadata } from "../../lib/metadata";
+
+export const metadata = publicPageMetadata(
+  "About / CV",
+  "Learn about my software engineering experience, education, skills, and professional background.",
+  "/about",
+);
 
 function sortByPosition<T extends { position: number }>(items: T[]): T[] {
   return [...items].sort((left, right) => left.position - right.position);
