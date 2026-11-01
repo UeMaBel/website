@@ -1,0 +1,11 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.4/schema.json",
+  "files": {
+    "includes": ["**", "!!.next", "!!out", "!!coverage", "!!node_modules", "!next-env.d.ts"]
+  },
+  "linter": {
+    "enabled": true,
+    "domains": { "react": "recommended", "next": "recommended" },
+    "rules": { "preset": "recommended" }
+  }
+}
