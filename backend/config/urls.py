@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 
 from blog.views import public_blog_detail, public_blog_list, public_blog_tags
+from profiles.views import public_profile
 from .views import health
 
 urlpatterns = [
@@ -25,5 +26,6 @@ urlpatterns = [
     path('api/v1/blog/posts/', public_blog_list, name='public-blog-list'),
     path('api/v1/blog/posts/<slug:slug>/', public_blog_detail, name='public-blog-detail'),
     path('api/v1/blog/tags/', public_blog_tags, name='public-blog-tags'),
+    path('api/v1/profile/', public_profile, name='public-profile'),
     path('admin/', admin.site.urls),
 ]
