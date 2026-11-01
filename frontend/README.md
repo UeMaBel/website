@@ -15,6 +15,56 @@ npm run dev
 Open <http://127.0.0.1:3000>. Stop the development server with Ctrl+C.
 The minimal home page renders on the server without backend configuration.
 
+## Container image
+
+Build and run the standalone production image from `frontend/`:
+
+```sh
+docker build --target production -t personal-website-frontend:local .
+docker run --rm --name personal-website-frontend \
+  --publish 127.0.0.1:3000:3000 \
+  --env BACKEND_API_URL=http://backend:8000 \
+  --env PUBLIC_SITE_ORIGIN=https://www.example.test \
+  personal-website-frontend:local
+```
+
+With the container running, verify server rendering and the 404 response:
+
+```sh
+curl -fsS http://127.0.0.1:3000/ | grep -F "Personal website"
+curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000/missing
+```
+
+For a known published slug, request `/blog/<slug>` and confirm its canonical
+and Open Graph URLs use the configured `PUBLIC_SITE_ORIGIN`.
+
+`BACKEND_API_URL` is the internal Django server origin used for server-side API
+requests. `PUBLIC_SITE_ORIGIN` is the public website origin used for runtime
+metadata. They are independent runtime settings; neither is baked into the
+image, and neither needs credentials. The default public origin is
+`http://127.0.0.1:3000`. Set `BACKEND_API_URL` explicitly when running in a
+container because `127.0.0.1` inside the frontend container refers to that
+container. The image serves SSR on port 3000 as an unprivileged user and has a
+root-page health check.
+
+To run the development target with hot reload, build and start it from this
+directory:
+
+```sh
+docker build --target development -t personal-website-frontend:dev .
+docker run --rm --name personal-website-frontend-dev \
+  --publish 127.0.0.1:3000:3000 \
+  --mount type=bind,source="$(pwd)",target=/app \
+  --mount type=volume,target=/app/node_modules \
+  --mount type=volume,target=/app/.next \
+  --env BACKEND_API_URL=http://host.docker.internal:8000 \
+  --env PUBLIC_SITE_ORIGIN=http://127.0.0.1:3000 \
+  personal-website-frontend:dev
+```
+
+Open <http://127.0.0.1:3000>. On Linux, add
+`--add-host=host.docker.internal:host-gateway` if the backend runs on the host.
+
 Verify and run the production build locally:
 
 ```sh

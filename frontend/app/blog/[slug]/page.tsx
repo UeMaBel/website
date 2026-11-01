@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { ApiError, getBlogPost, type BlogPost } from "../../../lib/api";
+import { getPublicSiteOrigin } from "../../../lib/public-origin";
 import { Markdown } from "../../../components/content/markdown";
 import { PageHeading } from "../../../components/content/page-heading";
 import { BlogTagLinks } from "../../../components/content/blog-tag-links";
@@ -47,14 +48,17 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   try {
     const post = await getPostForRender(slug);
     const description = metadataDescription(post.body, post.title);
+    const canonicalPath = `/blog/${encodeURIComponent(post.slug)}`;
 
     return {
       title: `${post.title} | Personal website`,
       description,
+      alternates: { canonical: canonicalPath },
       openGraph: {
         type: "article",
         title: post.title,
         description,
+        url: new URL(canonicalPath, getPublicSiteOrigin()).toString(),
         publishedTime: post.published_at,
         authors: [post.author.name],
         tags: post.tags.map((tag) => tag.name),
