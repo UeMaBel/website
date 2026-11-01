@@ -5,6 +5,7 @@ import { cache } from "react";
 import { ApiError, getBlogPost, type BlogPost } from "../../../lib/api";
 import { Markdown } from "../../../components/content/markdown";
 import { PageHeading } from "../../../components/content/page-heading";
+import { BlogTagLinks } from "../../../components/content/blog-tag-links";
 
 type BlogPostPageProps = {
   params: Promise<{ slug: string }>;
@@ -105,11 +106,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </p>
       </PageHeading>
 
-      {post.tags.length > 0 && (
-        <ul className="blog-detail-tags" aria-label="Post tags">
-          {post.tags.map((tag) => <li key={tag.slug}>{tag.name}</li>)}
-        </ul>
-      )}
+      {post.tags.length > 0 && <BlogTagLinks tags={post.tags} label="Post tags" />}
 
       <Markdown source={post.body} />
       <p className="blog-back-link"><Link href="/blog">Back to all posts</Link></p>
