@@ -131,6 +131,23 @@ class PublicBlogApiTests(TestCase):
         self.assertEqual(missing.json(), draft.json())
         self.assertEqual(self.client.get('/api/v1/blog/posts/published-detail/?q=x').status_code, 400)
 
+    def test_historical_urls_redirect_directly_to_latest_slug(self):
+        post = self.post('first-url')
+        post.slug = 'second-url'
+        post.save()
+        post.slug = 'latest-url'
+        post.save()
+
+        for historical_slug in ('first-url', 'second-url'):
+            with self.subTest(historical_slug=historical_slug):
+                response = self.client.get(f'/api/v1/blog/posts/{historical_slug}/')
+                self.assertEqual(response.status_code, 301)
+                self.assertEqual(response['Location'], '/api/v1/blog/posts/latest-url/')
+
+        latest = self.client.get('/api/v1/blog/posts/latest-url/')
+        self.assertEqual(latest.status_code, 200)
+        self.assertEqual(latest.json()['slug'], 'latest-url')
+
     def test_tag_collection_excludes_tags_used_only_by_drafts(self):
         first = self.post('tagged-first')
         first.tags.add(self.ai)

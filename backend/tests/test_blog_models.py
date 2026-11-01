@@ -51,6 +51,36 @@ class BlogModelTests(TestCase):
         post.save()
         post.refresh_from_db()
         self.assertEqual(post.slug, 'permanent-url')
+        self.assertEqual(
+            list(post.url_slugs.values_list('slug', 'is_current')),
+            [('permanent-url', True)],
+        )
+
+    def test_repeated_slug_changes_preserve_history_and_mark_only_latest_current(self):
+        post = self.post(slug='first-url')
+
+        post.slug = 'second-url'
+        post.save()
+        post.slug = 'third-url'
+        post.save()
+
+        self.assertEqual(
+            list(post.url_slugs.order_by('pk').values_list('slug', 'is_current')),
+            [('first-url', False), ('second-url', False), ('third-url', True)],
+        )
+
+    def test_historical_slug_cannot_be_reused(self):
+        post = self.post(slug='first-url')
+        post.slug = 'second-url'
+        post.save()
+
+        post.slug = 'first-url'
+        with self.assertRaises(ValidationError):
+            post.save()
+
+        other = BlogPost(author=self.author, title='Other post', slug='first-url', body='body')
+        with self.assertRaises(ValidationError):
+            other.full_clean()
 
     def test_post_and_tag_slugs_are_unique_and_nonempty(self):
         self.post(slug='unique')
