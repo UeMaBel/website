@@ -27,6 +27,7 @@ frontend_remote="$registry/$owner_lower/personal-website-frontend:$release_tag"
 docker buildx inspect --bootstrap
 docker buildx build \
   --file backend/Dockerfile \
+  --platform linux/amd64 \
   --target production \
   --tag "$backend_local" \
   --label "org.opencontainers.image.source=$source_url" \
@@ -35,6 +36,7 @@ docker buildx build \
   --load backend
 docker buildx build \
   --file frontend/Dockerfile \
+  --platform linux/amd64 \
   --target production \
   --tag "$frontend_local" \
   --label "org.opencontainers.image.source=$source_url" \

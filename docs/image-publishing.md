@@ -15,6 +15,11 @@ ghcr.io/<lowercase-owner>/personal-website-backend:vMAJOR.MINOR.PATCH
 ghcr.io/<lowercase-owner>/personal-website-frontend:vMAJOR.MINOR.PATCH
 ```
 
+The workflow currently builds `linux/amd64`, matching its Ubuntu runner and
+the integrated container smoke. Confirm the eventual host architecture before
+deployment; add a multi-platform manifest if the selected host requires another
+architecture.
+
 Before the first release, repository administrators must confirm that GitHub
 Actions is allowed to write packages and decide whether the GHCR packages
 should be public or private. The workflow uses the repository-scoped,
