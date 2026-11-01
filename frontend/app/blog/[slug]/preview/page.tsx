@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
-  title: "Draft preview | Personal website",
+  title: "Draft preview",
   description: null,
   alternates: null,
   openGraph: null,
