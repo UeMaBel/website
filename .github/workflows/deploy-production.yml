@@ -1,0 +1,268 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Deploy a release or roll back to a previously published version
+        type: choice
+        options:
+          - deploy
+          - rollback
+        required: true
+      image_tag:
+        description: Published vMAJOR.MINOR.PATCH image tag
+        type: string
+        required: true
+      site_domain:
+        description: Production DNS name; must match the protected host environment file
+        type: string
+        required: true
+      confirm_deployment:
+        description: Confirm the reviewed deployment or rollback operation
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy reviewed images to the protected production host
+    runs-on: ubuntu-24.04
+    environment: production
+    steps:
+      - name: Check out main and release history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate manual inputs and integrated release tag
+        env:
+          DEPLOY_OPERATION: ${{ inputs.operation }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          SITE_DOMAIN: ${{ inputs.site_domain }}
+          CONFIRM_DEPLOYMENT: ${{ inputs.confirm_deployment }}
+        run: |
+          set -Eeuo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Dispatch this workflow from main." >&2
+            exit 1
+          fi
+          if [[ "$CONFIRM_DEPLOYMENT" != "true" ]]; then
+            echo "Explicit deployment confirmation is required." >&2
+            exit 1
+          fi
+          if [[ "$DEPLOY_OPERATION" != "deploy" && "$DEPLOY_OPERATION" != "rollback" ]]; then
+            echo "Operation must be deploy or rollback." >&2
+            exit 1
+          fi
+          if [[ ! "$IMAGE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Image tag must be vMAJOR.MINOR.PATCH." >&2
+            exit 1
+          fi
+          if [[ ! "$SITE_DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ || "$SITE_DOMAIN" == *..* ]]; then
+            echo "Site domain must be a lowercase DNS name." >&2
+            exit 1
+          fi
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git fetch origin "refs/tags/$IMAGE_TAG:refs/tags/$IMAGE_TAG"
+          release_commit="$(git rev-list -n 1 "$IMAGE_TAG")"
+          if ! git merge-base --is-ancestor "$release_commit" refs/remotes/origin/main; then
+            echo "Release tag is not integrated into origin/main." >&2
+            exit 1
+          fi
+          echo "Validated $DEPLOY_OPERATION of $IMAGE_TAG for $SITE_DOMAIN."
+
+      - name: Deploy over verified SSH
+        env:
+          DEPLOY_OPERATION: ${{ inputs.operation }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          SITE_DOMAIN: ${{ inputs.site_domain }}
+          IMAGE_OWNER: ${{ github.repository_owner }}
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
+          PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          PRODUCTION_SSH_KNOWN_HOSTS: ${{ vars.PRODUCTION_SSH_KNOWN_HOSTS }}
+          PRODUCTION_COMPOSE_DIRECTORY: ${{ vars.PRODUCTION_COMPOSE_DIRECTORY }}
+          PRODUCTION_ENV_FILE: ${{ vars.PRODUCTION_ENV_FILE }}
+          PRODUCTION_BACKUP_DIRECTORY: ${{ vars.PRODUCTION_BACKUP_DIRECTORY }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$PRODUCTION_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]
+          [[ "$PRODUCTION_SSH_USER" =~ ^[a-z_][a-z0-9_-]*[$]?$ ]]
+          [[ "$PRODUCTION_COMPOSE_DIRECTORY" =~ ^/[A-Za-z0-9._/-]+$ ]]
+          [[ "$PRODUCTION_ENV_FILE" =~ ^/[A-Za-z0-9._/-]+$ ]]
+          [[ "$PRODUCTION_BACKUP_DIRECTORY" =~ ^/[A-Za-z0-9._/-]+$ ]]
+          [[ "$PRODUCTION_COMPOSE_DIRECTORY" != *".."* && "$PRODUCTION_ENV_FILE" != *".."* && "$PRODUCTION_BACKUP_DIRECTORY" != *".."* ]]
+          [[ -n "$PRODUCTION_SSH_PRIVATE_KEY" && -n "$PRODUCTION_SSH_KNOWN_HOSTS" ]]
+
+          ssh_dir="$RUNNER_TEMP/production-ssh"
+          mkdir -m 700 -p "$ssh_dir"
+          printf '%s\n' "$PRODUCTION_SSH_PRIVATE_KEY" > "$ssh_dir/id_ed25519"
+          printf '%s\n' "$PRODUCTION_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          chmod 600 "$ssh_dir/id_ed25519" "$ssh_dir/known_hosts"
+          ssh-keygen -y -f "$ssh_dir/id_ed25519" >/dev/null
+          ssh_options=(-i "$ssh_dir/id_ed25519" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$ssh_dir/known_hosts" -o ConnectTimeout=20)
+          target="$PRODUCTION_SSH_USER@$PRODUCTION_HOST"
+          stage="$PRODUCTION_COMPOSE_DIRECTORY/.deploy-stage-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          image_owner="${IMAGE_OWNER,,}"
+
+          ssh "${ssh_options[@]}" "$target" "mkdir -m 700 -p '$stage' && test -d '$PRODUCTION_COMPOSE_DIRECTORY' && test -r '$PRODUCTION_ENV_FILE' && test -d '$PRODUCTION_BACKUP_DIRECTORY'"
+          scp "${ssh_options[@]}" compose.production.yaml "$target:$stage/compose.production.yaml"
+
+          ssh "${ssh_options[@]}" "$target" bash -s -- \
+            "$DEPLOY_OPERATION" "$IMAGE_TAG" "$SITE_DOMAIN" \
+            "$PRODUCTION_COMPOSE_DIRECTORY" "$PRODUCTION_ENV_FILE" \
+            "$PRODUCTION_BACKUP_DIRECTORY" "$stage" "$image_owner" <<'REMOTE_DEPLOY'
+          set -Eeuo pipefail
+          operation="$1"
+          image_tag="$2"
+          site_domain="$3"
+          compose_directory="$4"
+          env_file="$5"
+          backup_root="$6"
+          stage_directory="$7"
+          image_owner="$8"
+          project="personal-website-production"
+          compose_file="$compose_directory/compose.production.yaml"
+          release_file="$compose_directory/compose.release.yaml"
+          current_release_file="$compose_directory/current-release"
+          previous_compose_file="$compose_directory/.compose.production.previous.yaml"
+          previous_release_file="$compose_directory/.compose.release.previous.yaml"
+          previous_current_release_file="$compose_directory/.current-release.previous"
+          config_changed=0
+          backend_stopped=0
+          had_release=0
+          had_current_release=0
+
+          compose() {
+            local args=(--project-name "$project" --env-file "$env_file" --file "$compose_file")
+            if [[ -f "$release_file" ]]; then
+              args+=(--file "$release_file")
+            fi
+            docker compose "${args[@]}" "$@"
+          }
+
+          restore_previous() {
+            if (( config_changed )); then
+              cp "$previous_compose_file" "$compose_file"
+              if (( had_release )); then
+                cp "$previous_release_file" "$release_file"
+              else
+                rm -f "$release_file"
+              fi
+              if (( had_current_release )); then
+                cp "$previous_current_release_file" "$current_release_file"
+              else
+                rm -f "$current_release_file"
+              fi
+            fi
+            if (( backend_stopped )); then
+              compose up --detach --no-build --wait --wait-timeout 300 || return 1
+            fi
+          }
+
+          on_exit() {
+            result=$?
+            trap - EXIT
+            if (( result != 0 )); then
+              echo "Deployment failed; restoring the previous application image configuration." >&2
+              if ! restore_previous; then
+                echo "Automatic application rollback failed. Inspect $compose_directory and the retained database backup." >&2
+                compose ps --all || true
+              fi
+            fi
+            rm -f "$stage_directory/compose.production.yaml"
+            rmdir "$stage_directory" 2>/dev/null || true
+            exit "$result"
+          }
+          trap on_exit EXIT
+
+          [[ "$operation" == deploy || "$operation" == rollback ]]
+          [[ "$image_tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          [[ "$site_domain" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ && "$site_domain" != *..* ]]
+          [[ -r "$env_file" && -f "$compose_file" && -f "$stage_directory/compose.production.yaml" ]]
+          grep -Fqx "SITE_DOMAIN=$site_domain" "$env_file"
+          env_mode="$(stat -c '%a' "$env_file")"
+          [[ "$env_mode" == 400 || "$env_mode" == 600 ]]
+          command -v docker >/dev/null
+          command -v curl >/dev/null
+          docker compose version >/dev/null
+          compose config --quiet
+
+          if [[ -f "$release_file" ]]; then had_release=1; fi
+          if [[ -f "$current_release_file" ]]; then had_current_release=1; fi
+          cp "$compose_file" "$previous_compose_file"
+          if (( had_release )); then cp "$release_file" "$previous_release_file"; fi
+          if (( had_current_release )); then cp "$current_release_file" "$previous_current_release_file"; fi
+
+          if [[ "$operation" == deploy ]]; then
+            running_services="$(compose ps --status running --services)"
+            grep -qx db <<< "$running_services"
+            grep -qx backend <<< "$running_services"
+            backend_container="$(compose ps -q backend)"
+            backend_image="$(docker inspect --format '{{.Image}}' "$backend_container")"
+            media_volume="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data/media"}}{{.Name}}{{end}}{{end}}' "$backend_container")"
+            [[ -n "$media_volume" ]]
+
+            timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+            backup_directory="$backup_root/pre-$image_tag-$timestamp"
+            [[ ! -e "$backup_directory" ]]
+            mkdir -m 700 "$backup_directory"
+            chmod 700 "$backup_root"
+            backend_stopped=1
+            compose stop --timeout 60 backend
+            compose exec --no-TTY db sh -ec 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump --no-password --format=custom --username="$POSTGRES_USER" --host=127.0.0.1 --dbname="$POSTGRES_DB"' > "$backup_directory/database.dump"
+            media_archive_script='import os,sys,tarfile; root=os.environ.get("DJANGO_MEDIA_ROOT","/data/media"); archive=tarfile.open(fileobj=sys.stdout.buffer,mode="w|gz"); archive.add(root,arcname="."); archive.close()'
+            docker run --rm --entrypoint python --volume "$media_volume:/data/media:ro" "$backend_image" -c "$media_archive_script" > "$backup_directory/media.tar.gz"
+            (cd "$backup_directory" && sha256sum database.dump media.tar.gz > SHA256SUMS)
+            printf '%s\n' "image=$image_tag" "domain=$site_domain" "created_at_utc=$timestamp" > "$backup_directory/deployment.txt"
+            echo "Pre-migration database and media backup saved at $backup_directory."
+          fi
+
+          install -m 0644 "$stage_directory/compose.production.yaml" "$compose_file.new"
+          mv "$compose_file.new" "$compose_file"
+          image_owner="$(printf '%s' "$image_owner" | tr '[:upper:]' '[:lower:]')"
+          config_changed=1
+          cat > "$release_file.new" <<RELEASE_COMPOSE
+          services:
+            backend:
+              image: ghcr.io/$image_owner/personal-website-backend:$image_tag
+            frontend:
+              image: ghcr.io/$image_owner/personal-website-frontend:$image_tag
+          RELEASE_COMPOSE
+          chmod 0644 "$release_file.new"
+          mv "$release_file.new" "$release_file"
+          printf '%s\n' "$image_tag" > "$current_release_file.new"
+          mv "$current_release_file.new" "$current_release_file"
+          compose config --quiet
+          compose pull backend frontend
+          if [[ "$operation" == deploy ]]; then
+            compose run --rm --no-deps backend python manage.py migrate --plan
+            compose run --rm --no-deps backend python manage.py migrate --noinput
+          fi
+          compose up --detach --no-build --wait --wait-timeout 300
+          if [[ "$operation" == deploy ]]; then
+            compose exec --no-TTY backend python manage.py migrate --check
+          fi
+          curl --retry 20 --retry-connrefused --retry-delay 3 --fail --silent --show-error \
+            --resolve "$site_domain:443:127.0.0.1" "https://$site_domain/api/v1/health/" >/dev/null
+          curl --retry 20 --retry-connrefused --retry-delay 3 --fail --silent --show-error \
+            --resolve "$site_domain:443:127.0.0.1" "https://$site_domain/robots.txt" >/dev/null
+          curl --retry 20 --retry-connrefused --retry-delay 3 --fail --silent --show-error \
+            --resolve "$site_domain:443:127.0.0.1" "https://$site_domain/static/admin/css/base.css" >/dev/null
+          backend_stopped=0
+          echo "Completed $operation of $image_tag; health checks passed."
+          REMOTE_DEPLOY
+
+      - name: Remove temporary SSH material
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/production-ssh"
