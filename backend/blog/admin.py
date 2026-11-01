@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from django.contrib import admin
 from django.utils import timezone
 
@@ -13,6 +15,7 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
+    change_form_template = 'admin/blog/blogpost/change_form.html'
     list_display = ['title', 'author', 'status', 'published_at']
     list_filter = ['status', 'tags', 'author']
     search_fields = ['title', 'slug', 'body']
@@ -22,6 +25,11 @@ class BlogPostAdmin(admin.ModelAdmin):
 
     def get_prepopulated_fields(self, request, obj=None):
         return {'slug': ('title',)} if obj is None else {}
+
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+        if obj is not None and obj.status == BlogPost.Status.DRAFT:
+            context['preview_url'] = f'/blog/{quote(obj.slug, safe="")}/preview'
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     @admin.action(description='Publish selected posts', permissions=['change'])
     def publish(self, request, queryset):
