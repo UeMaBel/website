@@ -125,7 +125,11 @@ links retain the selected tag filter.
 using the listing fields and adding `body` with the Markdown source. A missing
 slug and a draft post both return HTTP 404 with the same
 `{"detail":"Not found."}` response. The endpoint is public and accepts no
-query parameters.
+query parameters. When a slug was previously used by a published post, the
+endpoint returns HTTP 301 with a `Location` header pointing directly to that
+post's current canonical detail URL. Redirect targets always use the latest
+slug, including after multiple edits. A historical URL for a draft post returns
+HTTP 404.
 
 `GET /api/v1/blog/tags/` returns tags that are attached to at least one
 published post, ordered by name then primary key. Each result has `slug`,
@@ -194,6 +198,19 @@ Repeatable smoke check against the configured database:
 uv run --frozen --env-file .env manage.py shell -c "from django.test import Client; c=Client(HTTP_HOST='localhost'); r=c.get('/api/v1/projects/'); assert r.status_code == 200 and r.headers['Content-Type'] == 'application/json'; data=r.json(); assert set(data) == {'count', 'results'} and data['count'] == len(data['results']); assert all(set(project) == {'slug', 'title', 'problem', 'contribution', 'technologies', 'description', 'repository_url', 'demo_url', 'images'} for project in data['results']); missing=c.get('/api/v1/projects/not-a-project/'); assert missing.status_code == 404 and missing.json() == {'detail': 'Not found.'}; assert c.get('/api/v1/projects/?unexpected=1').status_code == 400; print('project API contract passed')"
 ```
 
+
+Run the focused PostgreSQL-backed regression suite from `backend/` with:
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_blog_api
+```
+
+Focused PostgreSQL-backed profile and project API regression tests run from
+`backend/` with:
+
+```sh
+uv run --frozen --env-file .env manage.py test tests.test_profile_project_api
+```
 
 ## Repeatable local verification
 
