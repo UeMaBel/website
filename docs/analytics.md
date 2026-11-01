@@ -130,6 +130,43 @@ Set `data-do-not-track="true"` as an additional browser preference safeguard.
 Sources: [tracker configuration](https://docs.umami.is/docs/tracker-configuration),
 [explicit payload API](https://docs.umami.is/docs/tracker-functions).
 
+Ticket 54 adds an explicit pageview adapter to the Next.js root layout. It reads
+the runtime-only `UMAMI_ENABLED`, `UMAMI_SCRIPT_URL`, and `UMAMI_WEBSITE_ID`
+settings. Tracking defaults off unless `UMAMI_ENABLED=true` and both public
+settings are valid. The script URL must point to the separate service's
+`/script.js`; non-local script origins must use HTTPS. Local HTTP is accepted
+only for loopback/`.localhost` hosts. The website ID is public and is not a
+dashboard credential. The production Compose stack does not enable analytics.
+Keep production collection off until the deployment's lawful basis, privacy
+notice, retention, and consent/opt-out requirements have been resolved.
+
+Only `/`, `/about`, `/contact`, `/blog`, `/blog/<public-slug>`, `/projects`, and
+`/projects/<public-slug>` are eligible. Preview, admin, API, and other nested
+paths are excluded. Events use the path without query or fragment, generic page
+titles, and an external HTTP(S) referrer origin only on the initial public
+navigation. Client route changes are tracked once per pathname; rerenders,
+query changes, and hash changes do not emit extra views. The adapter queues
+navigation while the script loads and discards the queue if loading fails.
+
+For a local synthetic smoke, create a website in the local Umami dashboard and
+use its website ID (never the production ID). From `frontend` in PowerShell,
+set the runtime values and start the Next.js development server:
+
+```powershell
+$env:UMAMI_ENABLED = "true"
+$env:UMAMI_SCRIPT_URL = "http://analytics.localhost:3000/script.js"
+$env:UMAMI_WEBSITE_ID = "<local Umami website ID>"
+npm run dev -- --port 31054
+```
+
+Open `http://127.0.0.1:31054`, then use client navigation and browser
+back/forward. The Network panel should show one `/api/send` request for each
+public pathname and none for query/hash changes or the draft preview route.
+Inspect that the JSON contains only `website`, `hostname`, `url`, `title`, and
+an optional sanitized `referrer`. Remove the settings or set
+`UMAMI_ENABLED=false` to disable tracking.
+The automated regression checks run with `cd frontend; npm test -- analytics`.
+
 Emit a minimal page payload with `website`, `hostname`, public `url`, generic
 `title`, and sanitized `referrer`. Click events add `name="outbound_interest"`
 and `data.category`, one of `contact_email`, `contact_profile`, `repository`, `demo`.
