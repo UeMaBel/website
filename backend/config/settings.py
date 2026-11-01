@@ -39,6 +39,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'uploads.apps.UploadsConfig',
     'blog.apps.BlogConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -133,3 +134,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
+MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL", "/media/")
+UPLOAD_MAX_BYTES = int(os.environ.get("DJANGO_UPLOAD_MAX_BYTES", "10485760"))
+if UPLOAD_MAX_BYTES <= 0:
+    raise ImproperlyConfigured("DJANGO_UPLOAD_MAX_BYTES must be positive")
