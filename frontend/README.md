@@ -55,9 +55,10 @@ These are server components; routes can compose them without browser state.
 
 The Blog route reads published posts, authors, and dates from the backend and
 uses query-string pagination. It shows separate empty, unavailable, and
-out-of-range page states. Home, About/CV, Projects, and Contact still show
-explicitly temporary placeholders. The blog detail route is implemented by its
-own content ticket.
+out-of-range page states. The About/CV route reads the profile API, renders
+ordered biography and career sections, and links an optional CV. Home, Projects,
+and Contact still show explicitly temporary placeholders. The blog detail route
+is implemented by its own content ticket.
 
 ## Layout verification
 
