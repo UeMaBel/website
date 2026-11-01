@@ -91,6 +91,28 @@ executable/obfuscated URL schemes, missing alt text, blocked images, and empty i
 Security defaults follow the [react-markdown security guidance](https://github.com/remarkjs/react-markdown#security).
 Do not replace its URL transform with an identity function or enable raw HTML.
 
+## Server-side API client
+
+`lib/api.ts` is server-only and provides typed requests for blog posts, tags,
+the public profile, and projects. Set `BACKEND_API_URL` to the Django server
+origin; it defaults to `http://127.0.0.1:8000` for local development. In a
+container stack, configure the internal Django service URL. Do not prefix this
+variable with `NEXT_PUBLIC_`.
+
+All requests use the versioned `/api/v1/` routes and `cache: "no-store"` so
+content edits appear without a frontend rebuild or application cache. Requests
+time out after five seconds. Failures reject with `ApiError`, whose `code` is
+one of `configuration`, `http`, `invalid_response`, `network`, or `timeout`;
+HTTP errors also include the response `status` when available. Backend response
+details and network exception messages are not exposed to callers.
+
+The TypeScript response types follow [the backend API contract](../backend/docs/api.md):
+blog listings return `Page<BlogPostSummary>`, blog detail adds Markdown `body`,
+tags return a counted collection, profile returns the fixed About/CV fields,
+and projects return a collection or one project. Markdown fields remain source
+text for the safe renderer. A 404 remains an `ApiError` with `code === "http"`
+and `status === 404`, allowing a server page to map missing content to a 404.
+
 Version sources: [Node.js release support](https://nodejs.org/en/about/previous-releases),
 [Next.js support policy](https://nextjs.org/support-policy), and the npm registry.
 Next.js 16.4.3 includes the fixes described in the
