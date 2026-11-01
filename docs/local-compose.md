@@ -34,8 +34,9 @@ healthy and has its own backend-independent `robots.txt` health check.
 
 Caddy 2.10.2 is the shared HTTP reverse proxy. Only the proxy publishes a host
 port, bound to loopback. The website, Django admin, versioned API, Django static
-paths, and uploaded-media paths use that same browser origin. Requests to the
-Django paths go directly to the backend; all other website paths go to Next.js.
+paths, and uploaded-media paths use that same browser origin. Admin HTML and API
+requests go to Django; collected static assets and uploaded media are served by
+Caddy from read-only mounts. All other website paths go to Next.js.
 This lets browser admin sessions use the same host and port as the draft-preview
 route. The backend and PostgreSQL no longer publish host ports.
 
@@ -55,12 +56,30 @@ on its internal database network, which the demo service cannot join. Replace
 the `demo` service and fixture with an independent project service when needed;
 keep its database private to that project's own network.
 
-The proxy forwards `/api/`, `/admin`, `/static/`, and `/media/` to Django while
-preserving the request host and cookies. Django serves admin HTML and API
-responses through these paths. Static asset collection and safe uploaded-media
-serving are implemented by infrastructure ticket 51; these proxy paths are
-ready for that serving layer. Until ticket 51 adds the serving layer, requests
-for static files or uploaded media return Django's normal not-found response.
+The proxy forwards `/api/`, `/admin`, and `/admin/*` to Django while preserving
+the request host and cookies. On backend start, Compose runs `collectstatic`
+into a persistent named volume. Caddy serves `/static/*` from that volume and
+`/media/*` from the backend's persistent media volume, mounted read-only. Media
+is served as files, never executed; responses include `nosniff` and a restrictive
+content security policy, and PDFs download as attachments. Django accepts files
+up to 10 MiB; Caddy limits the complete multipart upload request to 11 MiB so
+the request can include form and CSRF fields while bounding proxy/backend input.
+Set `DJANGO_UPLOAD_MAX_BYTES` and `UPLOAD_REQUEST_MAX_SIZE` together if changing
+the defaults; leave room for multipart overhead above the file limit.
+
+After uploading a PNG and PDF in Django admin, check their response headers and
+verify that the files still load after restarting the backend and proxy:
+
+```sh
+curl -fsSI http://localhost:3000/static/admin/css/base.css
+curl -fsSI http://localhost:3000/media/uploads/<stored-image-name>.png
+curl -fsSI http://localhost:3000/media/uploads/<stored-cv-name>.pdf
+docker compose --env-file backend/.env restart backend proxy
+```
+
+The static and media paths must remain available after restart. The PDF response
+must include `Content-Disposition: attachment`; media responses include
+`X-Content-Type-Options: nosniff`.
 
 Create the first administrator interactively:
 

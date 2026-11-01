@@ -24,7 +24,7 @@ FROM base AS development
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project
 COPY --chown=app:app . .
-RUN mkdir -p /data/media && chown -R app:app /data
+RUN mkdir -p /data/media /data/static && chown -R app:app /data
 
 ENV DJANGO_DEBUG=true \
     DJANGO_MEDIA_ROOT=/data/media
@@ -46,8 +46,8 @@ WORKDIR /app
 
 RUN groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /app app \
-    && mkdir -p /data/media \
-    && chown -R app:app /data/media
+    && mkdir -p /data/media /data/static \
+    && chown -R app:app /data/media /data/static
 
 COPY --from=production-dependencies --chown=app:app /opt/venv /opt/venv
 COPY --chown=app:app . .
