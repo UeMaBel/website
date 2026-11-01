@@ -1,0 +1,73 @@
+name: Backend checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_DB: website
+          POSTGRES_USER: website
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U website -d website"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-a-production-secret
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      POSTGRES_DB: website
+      POSTGRES_USER: website
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.11.6"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install locked backend dependencies
+        run: uv sync --frozen
+
+      - name: Check settings and lint
+        run: |
+          uv run --frozen python -m unittest tests.test_settings
+          uv run --frozen ruff check .
+
+      - name: Check Django configuration and migration drift
+        run: |
+          uv run --frozen manage.py check
+          uv run --frozen manage.py makemigrations --check --dry-run
+
+      - name: Apply migrations and verify database schema
+        run: |
+          uv run --frozen manage.py migrate --noinput
+          uv run --frozen manage.py migrate --check
+
+      - name: Run backend tests
+        run: uv run --frozen manage.py test
