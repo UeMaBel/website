@@ -100,7 +100,7 @@ docker compose --project-name restore-drill-20261101 \
   --env-file /protected/path/website-restore.env \
   --file compose.yaml exec backend python manage.py shell -c \
   "from uploads.models import UploadedMedia; print([(m.title, m.file.name, m.file.storage.exists(m.file.name)) for m in UploadedMedia.objects.all()])"
-curl -fsS http://localhost:3057/api/v1/health/
+curl -fsS http://localhost:3058/api/v1/health/
 ```
 
 After the drill, delete only the isolated project's containers and volumes:
