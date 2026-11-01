@@ -1,26 +1,8 @@
 import type { Metadata } from "next";
+import { getPublicSiteOrigin } from "./public-origin";
 
 export function getSiteUrl(): URL {
-  const configuredUrl = process.env.SITE_URL?.trim() || "http://localhost:3000";
-  let siteUrl: URL;
-  try {
-    siteUrl = new URL(configuredUrl);
-  } catch {
-    throw new Error("SITE_URL must be an absolute HTTP(S) origin.");
-  }
-
-  if (
-    (siteUrl.protocol !== "http:" && siteUrl.protocol !== "https:") ||
-    siteUrl.username ||
-    siteUrl.password ||
-    siteUrl.pathname !== "/" ||
-    siteUrl.search ||
-    siteUrl.hash
-  ) {
-    throw new Error("SITE_URL must be an HTTP(S) origin without credentials, path, query, or fragment.");
-  }
-
-  return siteUrl;
+  return getPublicSiteOrigin();
 }
 
 export function metadataDescription(markdown: string, fallback: string): string {
