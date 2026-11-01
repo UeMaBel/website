@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { ApiError, getBlogPost, type BlogPost } from "../../../lib/api";
 import { Markdown } from "../../../components/content/markdown";
@@ -91,6 +91,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <p><Link href="/blog">Back to all posts</Link></p>
       </>
     );
+  }
+
+  if (post.slug !== slug) {
+    permanentRedirect(`/blog/${encodeURIComponent(post.slug)}`);
   }
 
   return (
