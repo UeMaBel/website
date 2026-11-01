@@ -1,12 +1,12 @@
 from django.core.paginator import EmptyPage, Paginator
-from django.http import JsonResponse
+from django.http import HttpResponsePermanentRedirect, JsonResponse
 from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe
 
-from .models import BlogPost, Tag
+from .models import BlogPost, BlogPostSlug, Tag
 
 
 DEFAULT_PAGE_SIZE = 10
@@ -114,6 +114,19 @@ def public_blog_detail(request, slug):
         .first()
     )
     if post is None:
+        previous_slug = (
+            BlogPostSlug.objects.filter(
+                slug=slug,
+                is_current=False,
+                post__status=BlogPost.Status.PUBLISHED,
+            )
+            .select_related('post')
+            .first()
+        )
+        if previous_slug is not None:
+            return HttpResponsePermanentRedirect(
+                reverse('public-blog-detail', kwargs={'slug': previous_slug.post.slug}),
+            )
         return JsonResponse({'detail': 'Not found.'}, status=404)
     return JsonResponse(_post_data(post, include_body=True))
 

@@ -5,7 +5,15 @@ title, explicit unique slug, Markdown `body`, optional tags, draft/published
 status, optional publication timestamp, and creation/update timestamps.
 `blog.Tag` stores a name and unique slug. Both slug fields are required and
 nonempty; slugs are supplied explicitly and never derived again on title edits.
-Explicit slug history/redirects arrive in ticket 19.
+
+Every current and previously used post slug is reserved in `BlogPostSlug`. An
+explicit slug edit atomically marks the old slug historical and reserves the
+new canonical slug. A unique reservation prevents collisions with current or
+historical URLs; a post cannot reuse one of its own previous slugs, which
+prevents redirect cycles. Existing post slugs are reserved by the migration.
+The public detail API permanently redirects an old published URL directly to
+the current canonical slug. If the post is a draft, old URLs remain private
+and return 404. See the public API contract for redirect behavior.
 
 New posts default to draft. Publishing requires an explicit `published_at`;
 `full_clean()` gives a field validation error when it is absent, and PostgreSQL
@@ -63,6 +71,13 @@ uv run --frozen --env-file .env manage.py test tests.test_blog_models
 This exercises PostgreSQL constraints, protected/required authors, persisted
 Markdown and tags, stable slugs, explicit publishing/unpublishing, invalid
 states, and chronological ties using isolated test data.
+
+For a repeatable slug-history smoke check, in `manage.py shell` create and
+publish a post at slug `first`, save it again with slug `second`, and request
+`/api/v1/blog/posts/first/` with Django's test client. It must return HTTP 301
+with `Location: /api/v1/blog/posts/second/`. Rename the post to `third` and
+verify both `first` and `second` redirect directly to `third`. Attempting to
+assign `first` to another post or restore it on the original post must fail.
 
 ## Blog administration
 
