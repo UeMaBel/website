@@ -28,7 +28,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: container-integration-logs-${{ github.run_id }}
+          name: container-integration-logs-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/website-compose-ci.log
           if-no-files-found: warn
           retention-days: 7
