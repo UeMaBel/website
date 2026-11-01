@@ -19,6 +19,8 @@ Verify and run the production build locally:
 
 ```sh
 npm run typecheck
+npm run lint
+npm test
 npm run build
 npm start
 ```
@@ -27,7 +29,21 @@ The home route should return HTTP 200 with the heading "Personal website".
 An unknown route such as `/missing` should return HTTP 404. The page uses a
 fluid content width and the framework's viewport metadata. No external fonts,
 API credentials, or running Django service are needed by this initial shell.
-Lint and automated test commands will be added in ticket 28.
+
+`npm test` runs once and exits unsuccessfully if tests fail or no tests are found.
+`npm run test:watch` is the interactive development mode. Tests are colocated as
+`*.test.tsx` beside components; `tests/setup.ts` cleans the DOM after each test.
+The navigation smoke test verifies accessible link names and destinations without
+mocking the navigation component. Vitest with jsdom covers synchronous components;
+async server components and real browser journeys require integration checks.
+
+Lint uses Biome's recommended rules and fails on warnings.
+Typecheck generates Next.js route types first, so it also works before a build.
+Generated output, dependencies, and coverage are excluded from lint checks.
+These commands follow the official [Biome setup](https://biomejs.dev/guides/getting-started/)
+and [Vitest setup](https://nextjs.org/docs/app/guides/testing/vitest).
+Biome is one of the linters supported by the [Next.js installation guide](https://nextjs.org/docs/app/getting-started/installation).
+It supports the pinned TypeScript compiler without ESLint parser peer overrides.
 
 ## Component boundaries
 
