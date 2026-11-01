@@ -3,4 +3,7 @@ name = "personal-website-backend"
 version = "0.1.0"
 description = "Django content backend for the personal website"
 requires-python = ">=3.14,<3.15"
-dependencies = ["Django==5.2.18"]
+dependencies = [
+    "Django==5.2.18",
+    "psycopg[binary]==3.3.6",
+]
