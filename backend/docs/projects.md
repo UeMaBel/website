@@ -17,8 +17,9 @@ uploads are protected from deletion.
 Create a disposable empty PostgreSQL database and point `POSTGRES_DB` at it;
 then apply all migrations with `uv run --frozen --env-file .env manage.py
 migrate --noinput`. Run `manage.py migrate --check` and
-`manage.py makemigrations --check --dry-run` afterwards. The focused project
-model regression suite is ticket 15.
+`manage.py makemigrations --check --dry-run` afterwards. Run the focused project
+model regression suite with `uv run --frozen --env-file .env manage.py test
+tests.test_projects`.
 
 In `manage.py shell`, create a project with problem, contribution, technology
 names and a stable slug, change its title, attach uploaded image records at
