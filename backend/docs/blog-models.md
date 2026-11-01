@@ -63,3 +63,31 @@ uv run --frozen --env-file .env manage.py test tests.test_blog_models
 This exercises PostgreSQL constraints, protected/required authors, persisted
 Markdown and tags, stable slugs, explicit publishing/unpublishing, invalid
 states, and chronological ties using isolated test data.
+
+## Blog administration
+
+Log in at `/admin/` with an active staff account granted the blog post/tag
+view/add/change permissions (or a local superuser). Staff status alone does not
+grant content access. Anonymous users are redirected to login; staff lacking
+model permissions receive HTTP 403.
+
+- Add/edit tags under Blog > Tags.
+- Add a post under Blog > Blog posts. Assign the author, enter plain Markdown,
+  and select tags. Slug is suggested from the title only on the add screen;
+  edit forms retain the existing slug when the title changes.
+- New posts start as drafts. The explicit **Publish selected posts** action sets
+  the published state and fills a missing publication timestamp with now.
+  Existing publication timestamps are retained.
+- **Unpublish selected posts** returns them to draft, retaining the timestamp.
+  These actions require change permission. A single edit form can also set
+  status and publication timestamp explicitly; publishing without a timestamp
+  shows a field validation error.
+
+Repeatable manual check: create a local staff user with these permissions, log
+in, create/edit a tag, add a draft with an author and tag, edit its title, and
+confirm its slug is unchanged. Use both actions and reopen the form after each
+to confirm saved state/timestamp. Log out and confirm the content admin requires
+login; repeat with staff lacking permissions to confirm access is denied.
+The HTTP smoke drill for ticket 07 used a real non-superuser staff account,
+admin POSTs for each operation, and refreshed persisted objects after saves;
+all temporary content was rolled back.
