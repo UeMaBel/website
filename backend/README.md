@@ -44,7 +44,8 @@ No production or external credentials are needed for local development.
 ## Verification
 
 ```sh
-uv run --frozen python -m unittest discover -s tests
+uv run --frozen python -m unittest tests.test_settings
+uv run --frozen ruff check .
 uv run --frozen --env-file .env manage.py check
 uv run --frozen --env-file .env manage.py migrate --check
 uv run --frozen --env-file .env manage.py test
@@ -53,9 +54,19 @@ uv run --frozen --env-file .env manage.py test
 The environment tests exercise the settings interface in isolated processes,
 including missing secrets, configured PostgreSQL fields, debug, and allowed
 hosts. `migrate` followed by `migrate --check` proves connectivity and applied
-migrations against PostgreSQL, rather than falling back to SQLite. Application
-tests arrive in later tickets; the Django test runner currently runs the three
-environment regression tests without accessing the database.
+migrations against PostgreSQL, rather than falling back to SQLite. The Django test runner also exercises the public health contract (GET, HEAD,
+and rejected unsafe methods with CSRF enforcement), asserts zero database queries
+for health, and creates/destroys an isolated PostgreSQL `test_<POSTGRES_DB>`
+database. The local database role needs CREATEDB; use a dedicated local database
+role, never production credentials. Django isolates each database-backed test in
+transactions and does not use development content as fixtures. The environment
+regression tests run in subprocesses without touching the database.
+
+`uv sync --frozen` includes the pinned development Ruff dependency. The lint
+command checks syntax, unused/undefined names, and core Python errors; it does
+not rewrite files. Run commands from `backend/`. CI automation is ticket 60.
+[Ruff configuration](https://docs.astral.sh/ruff/configuration/) documents the
+explicit rule set in `pyproject.toml`.
 A startup smoke check with debug enabled requests `/` and expects HTTP 200 and
 the Django installation-success page.
 
@@ -71,3 +82,5 @@ libpq installation. `uv.lock` pins transitive dependencies.
 
 Production serving, hardened security settings, persistence, and deployment are
 later tickets. No hosting is provisioned here.
+
+The versioned [API contract](docs/api.md) documents endpoint behavior and smoke checks.
