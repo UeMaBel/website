@@ -1,0 +1,6 @@
+[Unit]
+Description=Report failure of %I
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger --priority daemon.err --tag personal-website-backup "Backup unit %I failed; inspect with journalctl -u %I"
