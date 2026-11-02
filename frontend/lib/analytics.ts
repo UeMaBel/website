@@ -6,8 +6,27 @@ export interface PageViewPayload {
   referrer?: string;
 }
 
+export type OutboundInterestCategory =
+  | "contact_email"
+  | "contact_profile"
+  | "repository"
+  | "demo";
+
+export interface OutboundInterestData {
+  category: OutboundInterestCategory;
+}
+
+export interface OutboundInterestPayload extends PageViewPayload {
+  name: "outbound_interest";
+  data: OutboundInterestData;
+}
+
 export interface UmamiTracker {
-  track: (payload: PageViewPayload) => void | Promise<void>;
+  track: {
+    (payload: PageViewPayload): void | Promise<void>;
+    (payload: OutboundInterestPayload): void | Promise<void>;
+  };
+  getSession?: () => { website: string | null };
 }
 
 const STATIC_PAGE_TITLES: Record<string, string> = {
@@ -119,5 +138,34 @@ export function sendPageView(tracker: UmamiTracker | undefined, payload: PageVie
     if (result) void Promise.resolve(result).catch(() => {});
   } catch {
     // Analytics is optional and must not affect navigation or rendering.
+  }
+}
+
+export function sendOutboundInterest(
+  tracker: UmamiTracker | undefined,
+  category: OutboundInterestCategory,
+): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const website = tracker?.getSession?.().website;
+    if (!tracker || !website) return;
+
+    const page = createPageViewPayload(
+      window.location.pathname,
+      website,
+      window.location.hostname,
+      window.location.origin,
+    );
+    if (!page) return;
+
+    const result = tracker.track({
+      ...page,
+      name: "outbound_interest",
+      data: { category },
+    });
+    if (result) void Promise.resolve(result).catch(() => {});
+  } catch {
+    // Outbound navigation must continue even when analytics is unavailable.
   }
 }

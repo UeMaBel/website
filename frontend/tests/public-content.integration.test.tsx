@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import HomePage from "../app/page";
 import AboutPage from "../app/about/page";
 import BlogPage from "../app/blog/page";
@@ -77,6 +77,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  delete window.umami;
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -161,7 +162,7 @@ describe("public content journeys", () => {
 
     render(await AboutPage());
 
-    const cvLink = screen.getByRole("link", { name: "Download curriculum vitae as a PDF" });
+    const cvLink = screen.getByRole("link", { name: "Download CV (PDF)" });
     expect(cvLink.getAttribute("href")).toBe("/media/uploads/cv.pdf");
     expect(cvLink.hasAttribute("download")).toBe(true);
   });
@@ -178,15 +179,49 @@ describe("public content journeys", () => {
     expect(screen.queryByRole("navigation", { name: "Project links" })).toBeNull();
   });
 
+  it("serves project images through the public same-origin media route", async () => {
+    vi.stubEnv("PUBLIC_SITE_ORIGIN", "https://www.example.test");
+    fetchMock.mockResolvedValue(jsonResponse(project({
+      images: [{
+        position: 0,
+        url: "/media/uploads/project-image.png",
+        alt_text: "Project diagram",
+      }],
+    })));
+
+    render(await ProjectDetailPage({ params: Promise.resolve({ slug: "sample-project" }) }));
+
+    const image = screen.getByRole("img", { name: "Project diagram" });
+    expect(image.getAttribute("src")).toBe("/media/uploads/project-image.png");
+    expect(image.getAttribute("src")).not.toContain("backend:8000");
+  });
+
   it("exposes configured repository and demo links", async () => {
     fetchMock.mockResolvedValue(jsonResponse(project({
       repository_url: "https://example.test/source",
       demo_url: "https://example.test/demo",
     })));
 
+    const track = vi.fn().mockResolvedValue(undefined);
+    window.umami = { getSession: () => ({ website: "synthetic-website" }), track };
     render(await ProjectDetailPage({ params: Promise.resolve({ slug: "sample-project" }) }));
 
-    expect(screen.getByRole("link", { name: "Source repository" }).getAttribute("href")).toBe("https://example.test/source");
-    expect(screen.getByRole("link", { name: "Live demo" }).getAttribute("href")).toBe("https://example.test/demo");
+    const repositoryLink = screen.getByRole("link", { name: "Source repository" });
+    const demoLink = screen.getByRole("link", { name: "Live demo" });
+    expect(repositoryLink.getAttribute("href")).toBe("https://example.test/source");
+    expect(demoLink.getAttribute("href")).toBe("https://example.test/demo");
+    expect(repositoryLink.getAttribute("target")).toBe("_blank");
+    expect(fireEvent.click(repositoryLink)).toBe(true);
+    expect(fireEvent.click(demoLink)).toBe(true);
+    expect(track).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      name: "outbound_interest",
+      data: { category: "repository" },
+    }));
+    expect(track).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      name: "outbound_interest",
+      data: { category: "demo" },
+    }));
+    expect(JSON.stringify(track.mock.calls)).not.toContain("example.test");
+    expect(JSON.stringify(track.mock.calls)).not.toContain("Source repository");
   });
 });

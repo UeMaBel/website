@@ -1,0 +1,15 @@
+[Unit]
+Description=Encrypted off-server backup of the personal website
+Wants=network-online.target
+After=network-online.target docker.service
+OnFailure=personal-website-backup-failure@%n.service
+
+[Service]
+Type=oneshot
+User=website-backup
+Group=docker
+EnvironmentFile=/etc/personal-website/offsite-backup.env
+WorkingDirectory=/opt/personal-website
+ExecStart=/usr/bin/python3 /opt/personal-website/scripts/offsite_backup.py
+UMask=0077
+TimeoutStartSec=6h
