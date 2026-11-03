@@ -9,6 +9,8 @@ class Profile(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
     display_name = models.CharField(max_length=200, blank=True)
     biography = models.TextField(blank=True, help_text='Markdown source')
+    contact_introduction = models.TextField(blank=True, help_text='Markdown source for the Contact page')
+    projects_introduction = models.TextField(blank=True, help_text='Markdown source for the Projects overview')
     email = models.EmailField(blank=True)
     cv = models.ForeignKey('uploads.UploadedMedia', null=True, blank=True,
                            on_delete=models.PROTECT, related_name='profiles',

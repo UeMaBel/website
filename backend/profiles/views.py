@@ -26,6 +26,8 @@ def public_profile(request):
         return JsonResponse({
             'display_name': '',
             'biography': '',
+            'contact_introduction': '',
+            'projects_introduction': '',
             'email': '',
             'cv_url': None,
             'experience': [],
@@ -37,6 +39,8 @@ def public_profile(request):
     return JsonResponse({
         'display_name': profile.display_name,
         'biography': profile.biography,
+        'contact_introduction': profile.contact_introduction,
+        'projects_introduction': profile.projects_introduction,
         'email': profile.email,
         'cv_url': profile.cv.file.url if profile.cv_id else None,
         'experience': [

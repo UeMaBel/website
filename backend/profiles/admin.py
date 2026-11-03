@@ -29,7 +29,7 @@ class ProfileLinkInline(admin.TabularInline):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    fields = ['display_name', 'biography', 'email', 'cv']
+    fields = ['display_name', 'biography', 'contact_introduction', 'projects_introduction', 'email', 'cv']
     inlines = [ExperienceInline, EducationInline, SkillInline, ProfileLinkInline]
 
     def has_add_permission(self, request):

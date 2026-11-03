@@ -72,3 +72,8 @@ persisted biography/contact edits, empty content, ordered experience/education/
 skills/links including deterministic ties and reordering, structured dates and
 Markdown, optional PDF attachment/removal, protected uploads, rejection of image
 or missing CV references, singleton ownership, and invalid contact values.
+
+
+## Page introductions
+
+The profile API includes `contact_introduction` and `projects_introduction`, both Markdown strings (empty when unset or when the profile is missing). Edit them on the singleton About/CV admin record. They supply the Contact and Projects overview introductions; individual project content is unchanged.

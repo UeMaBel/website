@@ -238,3 +238,8 @@ uv run --frozen --env-file .env manage.py shell -c "from django.test import Clie
 
 For an actual HTTP smoke check, start the documented development server and run
 `curl -i http://127.0.0.1:8000/api/v1/health/`.
+
+
+## Page introductions
+
+The profile API includes `contact_introduction` and `projects_introduction`, both Markdown strings (empty when unset or when the profile is missing). Edit them on the singleton About/CV admin record. They supply the Contact and Projects overview introductions; individual project content is unchanged.
