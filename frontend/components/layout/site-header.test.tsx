@@ -4,10 +4,11 @@ import { SiteHeader } from "./site-header";
 
 test("readers can find each public destination through the main navigation", () => {
   render(<SiteHeader />);
+  expect(screen.getByRole("link", { name: "[m.] Home" }).getAttribute("href")).toBe("/");
   const navigation = screen.getByRole("navigation", { name: "Main navigation" });
 
   for (const [name, href] of [
-    ["Home", "/"],
+
     ["Blog", "/blog"],
     ["About / CV", "/about"],
     ["Projects", "/projects"],

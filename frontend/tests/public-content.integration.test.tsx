@@ -89,7 +89,7 @@ describe("public content journeys", () => {
     render(await HomePage());
 
     expect(screen.getByRole("link", { name: "Read the blog" }).getAttribute("href")).toBe("/blog");
-    expect(screen.getByRole("link", { name: "Explore projects" }).getAttribute("href")).toBe("/projects");
+    expect(screen.getByRole("link", { name: "Projects" }).getAttribute("href")).toBe("/projects");
     expect(screen.getByRole("link", { name: "About / CV" }).getAttribute("href")).toBe("/about");
     expect(screen.getByRole("link", { name: "owner@example.test" }).getAttribute("href")).toBe("mailto:owner@example.test");
     expect(screen.getByRole("link", { name: "Professional profile" }).getAttribute("href")).toBe("https://example.test/owner");
