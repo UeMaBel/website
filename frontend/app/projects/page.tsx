@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
-import { getProjects } from "../../lib/api";
+import { getProfile, getProjects } from "../../lib/api";
 import { publicPageMetadata } from "../../lib/metadata";
 
 export const metadata = publicPageMetadata(
@@ -12,12 +12,15 @@ export const metadata = publicPageMetadata(
 
 export default async function ProjectsPage() {
   try {
-    const projects = await getProjects();
+    const [projects, profile] = await Promise.all([
+      getProjects(),
+      getProfile().catch(() => null),
+    ]);
 
     return (
       <>
         <PageHeading title="Projects">
-          <p>A selection of projects, the problems they address, and my contributions.</p>
+          {profile?.projects_introduction?.trim() && <Markdown source={profile.projects_introduction} />}
         </PageHeading>
 
         {projects.results.length === 0 ? (

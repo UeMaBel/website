@@ -2,6 +2,7 @@ import { ContentSection } from "../../components/content/content-section";
 import { PageHeading } from "../../components/content/page-heading";
 import { ProfileContactLinks } from "../../components/content/profile-contact-links";
 import { getProfile } from "../../lib/api";
+import { Markdown } from "../../components/content/markdown";
 import { publicPageMetadata } from "../../lib/metadata";
 
 export const metadata = publicPageMetadata(
@@ -16,7 +17,7 @@ export default async function ContactPage() {
     return (
       <>
         <PageHeading title="Contact">
-          <p>For independent software engineering, AI, and collaboration enquiries, get in touch by email or through a professional profile.</p>
+          {profile.contact_introduction?.trim() && <Markdown source={profile.contact_introduction} />}
         </PageHeading>
         <ContentSection id="contact-details" title="Contact details">
           <ProfileContactLinks email={profile.email} links={profile.links} />

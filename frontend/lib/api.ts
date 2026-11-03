@@ -96,6 +96,8 @@ export interface ProfileLink {
 export interface PublicProfile {
   display_name: string;
   biography: string;
+  contact_introduction: string;
+  projects_introduction: string;
   email: string;
   cv_url: string | null;
   experience: ProfileExperience[];

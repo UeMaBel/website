@@ -25,6 +25,8 @@ class PublicProfileApiTests(TestCase):
         return {
             'display_name': '',
             'biography': '',
+            'contact_introduction': '',
+            'projects_introduction': '',
             'email': '',
             'cv_url': None,
             'experience': [],
@@ -32,6 +34,16 @@ class PublicProfileApiTests(TestCase):
             'skills': [],
             'links': [],
         }
+
+    def test_page_introductions_are_persisted_and_returned_as_markdown(self):
+        profile = Profile.objects.create(
+            contact_introduction='Get in **touch**.',
+            projects_introduction='## Things I build',
+        )
+        profile.refresh_from_db()
+        data = self.client.get('/api/v1/profile/').json()
+        self.assertEqual(data['contact_introduction'], profile.contact_introduction)
+        self.assertEqual(data['projects_introduction'], profile.projects_introduction)
 
     def pdf_upload(self):
         stream = io.BytesIO()

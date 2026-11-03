@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import HomePage from "../app/page";
 import AboutPage from "../app/about/page";
+import ContactPage from "../app/contact/page";
+import ProjectsPage from "../app/projects/page";
 import BlogPage from "../app/blog/page";
 import BlogPostPage from "../app/blog/[slug]/page";
 import ProjectDetailPage from "../app/projects/[slug]/page";
@@ -83,6 +85,34 @@ afterEach(() => {
 });
 
 describe("public content journeys", () => {
+  it("renders backend Markdown introductions on Contact and Projects", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({
+      ...profile(null),
+      contact_introduction: "Let's **build** something.",
+      projects_introduction: "Explore my **experiments**.",
+    }));
+    const contact = render(await ContactPage());
+    expect(screen.getByText("build").tagName).toBe("STRONG");
+    contact.unmount();
+    fetchMock.mockImplementation((url: URL) => Promise.resolve(jsonResponse(
+      url.pathname === "/api/v1/projects/"
+        ? { count: 0, results: [] }
+        : { ...profile(null), projects_introduction: "Explore my **experiments**." },
+    )));
+    render(await ProjectsPage());
+    expect(screen.getByText("experiments").tagName).toBe("STRONG");
+  });
+
+  it("keeps projects available when the optional profile request fails", async () => {
+    fetchMock.mockImplementation((url: URL) => Promise.resolve(
+      url.pathname === "/api/v1/projects/"
+        ? jsonResponse({ count: 1, results: [project()] })
+        : jsonResponse({}, 503),
+    ));
+    render(await ProjectsPage());
+    expect(screen.getByRole("link", { name: "Sample project" })).toBeTruthy();
+  });
+
   it("lets readers navigate from the home page to public sections", async () => {
     fetchMock.mockResolvedValue(jsonResponse(profile(null)));
 
