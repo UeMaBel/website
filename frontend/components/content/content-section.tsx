@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 
 export function ContentSection({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id}>
+    <section className="content-section" aria-labelledby={id}>
       <h2 id={id}>{title}</h2>
-      {children}
+      <div className="content-section-body">{children}</div>
     </section>
   );
 }

@@ -74,11 +74,13 @@ main {
 }
 
 main > .page-container {
-  max-width: 48rem;
+  max-width: 80rem;
 }
 
 .page-heading {
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
+  padding-block: 1rem 2.5rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 h1,
@@ -91,14 +93,14 @@ h4 {
 
 h1,
 h2 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-weight: 600;
 }
 
 h1 {
   margin: 0 0 1.25rem;
-  font-size: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);
-  letter-spacing: -0.025em;
+  font-size: clamp(2.8rem, 5.3vw, 5rem);
+  letter-spacing: -0.065em;
 }
 
 h2 {
@@ -169,12 +171,13 @@ li + li {
 }
 
 .profile-entry-list {
-  padding-inline-start: 1.5rem;
+  padding-inline-start: 0;
+  list-style: none;
   margin: 0;
 }
 
 .profile-entry {
-  padding-block: 1.5rem;
+  padding-block: 2rem;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -250,12 +253,14 @@ ul.profile-skill-list > li + li {
 }
 
 .blog-post {
-  padding-block: 1.5rem;
+  padding: 2rem;
+  background: #f0f1e9;
+  border-radius: 4px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .blog-post:first-child {
-  padding-block-start: 0;
+  padding-block-start: 2rem;
 }
 
 .blog-post h2 {
@@ -505,18 +510,23 @@ blockquote {
 }
 
 .project-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 27rem), 1fr));
+  gap: 1.5rem;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
 .project-entry {
-  padding-block: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
+  padding: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #f0f1e9;
 }
 
 .project-entry:first-child {
-  padding-block-start: 0;
+  padding-block-start: 2rem;
 }
 
 .project-list .project-entry h2 {
@@ -670,4 +680,16 @@ main:has(.landing) { padding-top: 0; }
 .particle-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
 .particle-controls { position: relative; display: grid; justify-items: center; gap: .5rem; padding-bottom: 1rem; }
 .particle-controls .field-label { grid-column: 1 / -1; }
+.page-title { background: linear-gradient(transparent 72%, #c6f36b 72%, #c6f36b 94%, transparent 94%); }
+.content-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 2rem; padding-block: 3rem; border-bottom: 1px solid var(--color-border); }
+.content-section :where(h2) { margin: 0; font-weight: 500; letter-spacing: -.04em; }
+.content-section-body { min-width: 0; }
+.content-section-body > :where(:last-child) { margin-bottom: 0; }
+.blog-post-list { display: grid; gap: 1rem; }
+.blog-post-list > :where(li) { margin-top: 0; }
+.blog-post-list :where(a), .project-list :where(a) { text-decoration: none; }
+.blog-post-list :where(a:hover), .project-list :where(a:hover) { text-decoration: underline; }
+.blog-article, .project-detail { max-width: 48rem; margin-inline: auto; }
+.page-heading > :where(p) { max-width: 44rem; color: var(--color-muted); }
+@media (max-width: 48rem) { .content-section { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; padding-block: 2rem; } }
 @media (max-width: 63.99rem) { .particle-slot { min-height: 24rem; } }
