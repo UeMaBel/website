@@ -5,49 +5,199 @@ import { ProfileContactLinks } from "../components/content/profile-contact-links
 import { getBlogPosts, getProfile, getProjects } from "../lib/api";
 import { publicPageMetadata } from "../lib/metadata";
 
-export const metadata = publicPageMetadata("Personal website", "Blog, projects, and professional profile.", "/");
+export const metadata = publicPageMetadata(
+  "Software, data and AI",
+  "Freelance software development, data platforms and AI experiments. Projects and writing by Matthias Uebelacker.",
+  "/",
+);
 
 export default async function HomePage() {
-  const [profileResult, projectsResult, postsResult] = await Promise.allSettled([getProfile(), getProjects(), getBlogPosts({ pageSize: 3 })]);
-  const profile = profileResult.status === "fulfilled" ? profileResult.value : null;
-  const projects = projectsResult.status === "fulfilled" ? projectsResult.value.results.slice(0, 2) : [];
-  const posts = postsResult.status === "fulfilled" ? postsResult.value.results : [];
-  return <div className="landing">
-    <section className="hero grid items-center gap-8 lg:grid-cols-[1.2fr_1fr]" aria-labelledby="hero-title">
-      <div className="hero-copy">
-        <p className="eyebrow"><span className="status-dot" /> {profile?.display_name.trim() || "[Name / professional title]"}</p>
-        <h1 id="hero-title">First headline.<br />Supporting line.<br /><span>Highlighted line.</span></h1>
-        <p className="hero-description">[Short introduction: your role, focus, and what visitors should know about you.]</p>
-        <div className="flex flex-wrap gap-3">
-          <Link className="button-primary" href="/projects">Projects <span aria-hidden="true">↗</span></Link>
-          <Link className="button-secondary" href="/contact">Contact <span aria-hidden="true">↗</span></Link>
+  const [profileResult, projectsResult, postsResult] = await Promise.allSettled(
+    [getProfile(), getProjects(), getBlogPosts({ pageSize: 3 })],
+  );
+  const profile =
+    profileResult.status === "fulfilled" ? profileResult.value : null;
+  const projects =
+    projectsResult.status === "fulfilled"
+      ? projectsResult.value.results.slice(0, 2)
+      : [];
+  const posts =
+    postsResult.status === "fulfilled" ? postsResult.value.results : [];
+  return (
+    <div className="landing">
+      <section
+        className="hero grid items-center gap-8 lg:grid-cols-[1.2fr_1fr]"
+        aria-labelledby="hero-title"
+      >
+        <div className="hero-copy">
+          <p className="eyebrow">
+            <span className="status-dot" />{" "}
+            {profile?.display_name.trim() || "Freelance software developer"}
+          </p>
+          <h1 id="hero-title">
+            Grounded in fundamentals, <span>accelerated by AI.</span>
+          </h1>
+          <p className="hero-description">
+            I build data platforms and applications that help companies get
+            things done. From the first idea to keeping things running. I also
+            spend a lot of time exploring AI, coding agents and the occasional
+            rabbit hole.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link className="button-primary" href="/projects">
+              Projects <span aria-hidden="true">↗</span>
+            </Link>
+            <Link className="button-secondary" href="/contact">
+              Contact <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
         </div>
+        <PointField />
+      </section>
+      <div className="discipline-strip flex flex-wrap justify-between gap-4">
+        <span>Software development</span>
+        <span aria-hidden="true">↗</span>
+        <span>Data platforms</span>
+        <span aria-hidden="true">↗</span>
+        <span>AI experiments</span>
       </div>
-      <PointField />
-    </section>
-    <div className="discipline-strip flex flex-wrap justify-between gap-4"><span>[Focus area 1]</span><span aria-hidden="true">↗</span><span>[Focus area 2]</span><span aria-hidden="true">↗</span><span>[Focus area 3]</span></div>
-    <section className="landing-section grid gap-8 md:grid-cols-[1fr_2fr]" aria-labelledby="intro-title">
-      <p className="eyebrow">01 / Introduction</p>
-      <div><h2 id="intro-title">[Introduction heading]</h2>
-        <p className="intro-copy">[Introduce your background, experience, and current interests.]</p>
-        {profile?.biography.trim() && <div className="intro-biography"><Markdown source={profile.biography} /></div>}
-        <Link className="text-link" href="/about">About / CV <span aria-hidden="true">↗</span></Link>
-      </div>
-    </section>
-    <section className="landing-section" aria-labelledby="work-title">
-      <div className="section-top flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow">02 / Projects</p><h2 id="work-title">[Selected projects heading]</h2></div><Link className="text-link" href="/projects">All projects <span aria-hidden="true">↗</span></Link></div>
-      {projects.length > 0 ? <div className="grid gap-5 md:grid-cols-2">{projects.map((project, i) => <Link className="work-card" href={`/projects/${encodeURIComponent(project.slug)}`} key={project.slug}>
-        <div className={`project-art project-art-${i}`} aria-hidden="true"><span>{i === 0 ? "{ · }" : "↗"}</span><span className="art-caption">ENGINEERING / {String(i + 1).padStart(2, "0")}</span></div>
-        <div className="card-copy"><p className="eyebrow">{project.technologies.slice(0, 3).join(" / ") || "Software project"}</p><h3>{project.title} <span aria-hidden="true">↗</span></h3><Markdown source={project.problem} /></div>
-      </Link>)}</div> : <div className="content-empty"><p>{projectsResult.status === "rejected" ? "Projects are temporarily unavailable. Please try again later." : "[Selected projects will appear here once added.]"}</p><Link className="text-link" href="/projects">Explore projects ↗</Link></div>}
-    </section>
-    <section className="landing-section" aria-labelledby="writing-title">
-      <div className="section-top flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow">03 / Blog</p><h2 id="writing-title">[Latest articles heading]</h2></div><Link className="text-link" href="/blog">Read the blog <span aria-hidden="true">↗</span></Link></div>
-      {posts.length > 0 ? <ol className="writing-list">{posts.map((post) => <li key={post.slug}><Link href={`/blog/${encodeURIComponent(post.slug)}`}><span className="eyebrow">{post.tags[0]?.name || "Engineering"}</span><h3>{post.title}</h3><span aria-hidden="true">↗</span></Link></li>)}</ol> : <div className="content-empty"><p>{postsResult.status === "rejected" ? "Writing is temporarily unavailable. Please try again later." : "[Latest articles will appear here once published.]"}</p></div>}
-    </section>
-    <section className="contact-panel grid gap-8 md:grid-cols-[1.6fr_1fr]" aria-labelledby="contact-title">
-      <div><p className="eyebrow">04 / Contact</p><h2 id="contact-title">[Contact heading]</h2><p>[Describe what people can contact you about.]</p><Link className="button-primary" href="/contact">Contact <span aria-hidden="true">↗</span></Link></div>
-      <div className="contact-details">{profile ? <ProfileContactLinks email={profile.email} links={profile.links} /> : <p className="profile-error" role="alert">Contact details are temporarily unavailable. Please try again later.</p>}</div>
-    </section>
-  </div>;
+      <section
+        className="landing-section grid gap-8 md:grid-cols-[1fr_2fr]"
+        aria-labelledby="intro-title"
+      >
+        <p className="eyebrow">01 / Introduction</p>
+        <div>
+          <h2 id="intro-title">From the first conversation to production</h2>
+          <p className="intro-copy">
+            I’ve been self-employed since 2020, building software for both tech
+            and non-tech companies. I start by understanding how people work,
+            what they need and what gets in the way. Clear communication and a
+            solid architecture are key for me, from the first conversation
+            through development and into daily use.
+          </p>
+          {profile?.biography.trim() && (
+            <div className="intro-biography">
+              <Markdown source={profile.biography} />
+            </div>
+          )}
+          <Link className="text-link" href="/about">
+            About / CV <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+      </section>
+      <section className="landing-section" aria-labelledby="work-title">
+        <div className="section-top flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">02 / Projects</p>
+            <h2 id="work-title">Things I've built</h2>
+          </div>
+          <Link className="text-link" href="/projects">
+            All projects <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+        {projects.length > 0 ? (
+          <div className="grid gap-5 md:grid-cols-2">
+            {projects.map((project, i) => (
+              <Link
+                className="work-card"
+                href={`/projects/${encodeURIComponent(project.slug)}`}
+                key={project.slug}
+              >
+                <div
+                  className={`project-art project-art-${i}`}
+                  aria-hidden="true"
+                >
+                  <span>{i === 0 ? "{ · }" : "↗"}</span>
+                  <span className="art-caption">
+                    ENGINEERING / {String(i + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className="card-copy">
+                  <p className="eyebrow">
+                    {project.technologies.slice(0, 3).join(" / ") ||
+                      "Software project"}
+                  </p>
+                  <h3>
+                    {project.title} <span aria-hidden="true">↗</span>
+                  </h3>
+                  <Markdown source={project.problem} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="content-empty">
+            <p>
+              {projectsResult.status === "rejected"
+                ? "Projects are temporarily unavailable. Please try again later."
+                : "Project write-ups are on their way."}
+            </p>
+            <Link className="text-link" href="/projects">
+              Explore projects ↗
+            </Link>
+          </div>
+        )}
+      </section>
+      <section className="landing-section" aria-labelledby="writing-title">
+        <div className="section-top flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">03 / Blog</p>
+            <h2 id="writing-title">Notes from the work</h2>
+          </div>
+          <Link className="text-link" href="/blog">
+            Read the blog <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+        {posts.length > 0 ? (
+          <ol className="writing-list">
+            {posts.map((post) => (
+              <li key={post.slug}>
+                <Link href={`/blog/${encodeURIComponent(post.slug)}`}>
+                  <span className="eyebrow">
+                    {post.tags[0]?.name || "Engineering"}
+                  </span>
+                  <h3>{post.title}</h3>
+                  <span aria-hidden="true">↗</span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="content-empty">
+            <p>
+              {postsResult.status === "rejected"
+                ? "Writing is temporarily unavailable. Please try again later."
+                : "I'm working on my first posts. They'll appear here once they're ready."}
+            </p>
+          </div>
+        )}
+      </section>
+      <section
+        className="contact-panel grid gap-8 md:grid-cols-[1.6fr_1fr]"
+        aria-labelledby="contact-title"
+      >
+        <div>
+          <p className="eyebrow">04 / Contact</p>
+          <h2 id="contact-title">What are you working on?</h2>
+          <p>
+            Have a project in mind or an existing application that needs work?
+            Tell me what you're building and where you could use a hand.
+          </p>
+          <Link className="button-primary" href="/contact">
+            Contact <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+        <div className="contact-details">
+          {profile ? (
+            <ProfileContactLinks email={profile.email} links={profile.links} />
+          ) : (
+            <p className="profile-error" role="alert">
+              Contact details are temporarily unavailable. Please try again
+              later.
+            </p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }

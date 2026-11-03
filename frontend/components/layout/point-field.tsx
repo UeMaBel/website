@@ -124,8 +124,5 @@ export function PointField() {
 
   return <div className="particle-slot">
     <canvas ref={canvasRef} className="particle-canvas" aria-hidden="true" tabIndex={-1} />
-    <div className="particle-controls">
-      <span className="field-label">[VISUAL CAPTION]</span>
-    </div>
   </div>;
 }
