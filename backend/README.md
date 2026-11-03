@@ -13,9 +13,9 @@ uv run --frozen python -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
 
 Set `POSTGRES_PASSWORD` to your local PostgreSQL role's password. The example
-contains no secrets. Never commit `.env`. Shell environment values take precedence
-when using uv's explicit `--env-file .env` option; Django itself reads only the
-environment and does not automatically load files.
+contains no secrets. Never commit `.env`. Settings automatically load `backend/.env`
+using python-dotenv, regardless of the working directory. Existing shell environment
+values take precedence. If `.env` is absent, settings use the environment alone.
 
 `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_HOST`, and `POSTGRES_PORT` default to
 `website`, `website`, `127.0.0.1`, and `5432`. The password defaults to empty so
@@ -30,15 +30,15 @@ throwaway local Docker database. With the filled `.env` file:
 ```sh
 docker run --detach --name website-postgres --env-file .env --publish 127.0.0.1:5432:5432 postgres:17
 uv sync --frozen
-uv run --frozen --env-file .env manage.py migrate
-uv run --frozen --env-file .env manage.py runserver 127.0.0.1:8000
+uv run --frozen manage.py migrate
+uv run --frozen manage.py runserver 127.0.0.1:8000
 ```
 
 The Docker command is for disposable local data only; persistent volumes and
 Compose are later infrastructure tickets. Match the published host port to
 `POSTGRES_PORT` if the default is occupied. Stop the server with Ctrl+C.
 The admin login is at `/admin/`; create a local account with
-`uv run --frozen --env-file .env manage.py createsuperuser` when needed.
+`uv run --frozen manage.py createsuperuser` when needed.
 No production or external credentials are needed for local development.
 
 ## Verification
@@ -46,9 +46,9 @@ No production or external credentials are needed for local development.
 ```sh
 uv run --frozen python -m unittest tests.test_settings
 uv run --frozen ruff check .
-uv run --frozen --env-file .env manage.py check
-uv run --frozen --env-file .env manage.py migrate --check
-uv run --frozen --env-file .env manage.py test
+uv run --frozen manage.py check
+uv run --frozen manage.py migrate --check
+uv run --frozen manage.py test
 ```
 
 The environment tests exercise the settings interface in isolated processes,

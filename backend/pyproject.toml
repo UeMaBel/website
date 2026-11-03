@@ -9,6 +9,7 @@ dependencies = [
     "pillow==13.0.0",
     "psycopg[binary]==3.3.6",
     "pypdf==6.21.4",
+    "python-dotenv==1.2.4",
 ]
 
 [dependency-groups]
