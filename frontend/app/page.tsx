@@ -64,7 +64,7 @@ export default async function HomePage() {
         <span><span className="chrome-bracket" aria-hidden="true">[</span> AI experiments <span className="chrome-bracket" aria-hidden="true">]</span></span>
       </div>
       <section
-        className="landing-section grid gap-8 md:grid-cols-[1fr_2fr]"
+        className="landing-section section-divider grid gap-8 md:grid-cols-[1fr_2fr]"
         aria-labelledby="intro-title"
       >
         <p className="eyebrow">01 / Introduction</p>

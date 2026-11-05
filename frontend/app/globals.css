@@ -686,6 +686,18 @@ main:has(.landing) { padding-top: 0; }
 .content-section :where(h2) { margin: 0; font-weight: 500; letter-spacing: -.04em; }
 .content-section-body { min-width: 0; }
 .content-section-body > :where(:last-child) { margin-bottom: 0; }
+@media (min-width: 48.01rem) {
+  .section-divider > :last-child { position: relative; min-width: 0; }
+  .section-divider > :last-child::before {
+    content: "";
+    position: absolute;
+    inset-block: .75rem;
+    inset-inline-start: -1rem;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--color-border) 15%, var(--color-border) 85%, transparent);
+    pointer-events: none;
+  }
+}
 .blog-post-list { display: grid; gap: 1rem; }
 .blog-post-list > :where(li) { margin-top: 0; }
 .blog-post-list :where(a), .project-list :where(a) { text-decoration: none; }
