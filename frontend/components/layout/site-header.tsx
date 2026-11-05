@@ -17,7 +17,13 @@ export function SiteHeader() {
         <nav aria-label="Main navigation">
           <ul className="navigation">
             {navigation.map(({ href, label }) => (
-              <li key={href}><Link href={href}>{label}</Link></li>
+              <li key={href}>
+                <Link href={href}>
+                  <span className="chrome-bracket" aria-hidden="true">[</span>
+                  {label}
+                  <span className="chrome-bracket" aria-hidden="true">]</span>
+                </Link>
+              </li>
             ))}
           </ul>
         </nav>

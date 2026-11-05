@@ -57,11 +57,11 @@ export default async function HomePage() {
         <PointField />
       </section>
       <div className="discipline-strip flex flex-wrap justify-between gap-4">
-        <span>Software development</span>
+        <span><span className="chrome-bracket" aria-hidden="true">[</span> Software development <span className="chrome-bracket" aria-hidden="true">]</span></span>
         <span aria-hidden="true">↗</span>
-        <span>Data platforms</span>
+        <span><span className="chrome-bracket" aria-hidden="true">[</span> Data platforms <span className="chrome-bracket" aria-hidden="true">]</span></span>
         <span aria-hidden="true">↗</span>
-        <span>AI experiments</span>
+        <span><span className="chrome-bracket" aria-hidden="true">[</span> AI experiments <span className="chrome-bracket" aria-hidden="true">]</span></span>
       </div>
       <section
         className="landing-section grid gap-8 md:grid-cols-[1fr_2fr]"
