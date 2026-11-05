@@ -46,6 +46,7 @@ cleanup() {
   exit "$result"
 }
 trap cleanup EXIT
+trap 'echo "Compose smoke failed at line $LINENO (exit $?)." >&2' ERR
 
 db_password="$(openssl rand -hex 32)"
 django_secret="$(openssl rand -hex 32)"
@@ -79,7 +80,8 @@ curl --retry 20 --retry-connrefused --retry-delay 2 --fail --silent --show-error
   --resolve "localhost:$ci_port:127.0.0.1" "$base_url/api/v1/health/" >/dev/null
 curl --fail --silent --show-error --resolve "localhost:$ci_port:127.0.0.1" \
   "$base_url/" --output "$home_html"
-grep -q 'Explore the website' "$home_html"
+# Check rendered page structure without coupling the smoke test to marketing copy.
+grep -qF '<h1 id="hero-title">' "$home_html"
 curl --fail --silent --show-error --resolve "localhost:$ci_port:127.0.0.1" \
   "$base_url/admin/login/" --output "$admin_html"
 grep -q 'admin/css/base.css' "$admin_html"
