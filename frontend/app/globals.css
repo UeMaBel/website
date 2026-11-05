@@ -95,8 +95,9 @@ h2 {
 
 h1 {
   margin: 0 0 1.25rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: clamp(2.8rem, 5.3vw, 5rem);
-  letter-spacing: -0.065em;
+  letter-spacing: -0.04em;
 }
 
 h2 {
@@ -605,9 +606,9 @@ main:has(.landing) { padding-top: 0; }
 .hero { min-height: 43rem; padding-block: 5rem; }
 .eyebrow { font: 600 .7rem/1.6 ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 1.5rem; }
 .status-dot { display: inline-block; width: .5rem; height: .5rem; background: #527d2b; border-radius: 50%; margin-right: .5rem; }
-.landing h1, .landing :where(h2), .landing :where(h3) { font-family: Arial, Helvetica, sans-serif; }
-.landing h1 { font-size: clamp(2.8rem, 5.3vw, 5rem); font-weight: 600; letter-spacing: -.065em; line-height: 1.06; margin-bottom: 1.75rem; }
-.landing h1 > span { background: linear-gradient(transparent 62%, var(--accent) 62%, var(--accent) 93%, transparent 93%); }
+.landing :where(h2), .landing :where(h3) { font-family: Arial, Helvetica, sans-serif; }
+.landing h1 { font-size: clamp(2.8rem, 5.3vw, 5rem); font-weight: 600; line-height: 1.06; margin-bottom: 1.75rem; }
+.landing h1 > span { background: linear-gradient(transparent 62%, var(--accent) 78%, var(--accent) 93%, transparent 93%); }
 .hero-description { max-width: 31rem; color: var(--color-muted); font-size: 1.05rem; line-height: 1.8; margin-bottom: 2rem; }
 .button-primary, .button-secondary { display: inline-flex; align-items: center; justify-content: space-between; gap: 2rem; min-height: 50px; padding: .75rem 1.2rem; font-size: .85rem; font-weight: 600; text-decoration: none; border: 1px solid var(--ink); border-radius: 3px; transition: background .2s, transform .2s; }
 .button-primary { background: var(--ink); color: #faf9f6; }
@@ -681,7 +682,7 @@ main:has(.landing) { padding-top: 0; }
 .particle-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
 .particle-controls { position: relative; display: grid; justify-items: center; gap: .5rem; padding-bottom: 1rem; }
 .particle-controls .field-label { grid-column: 1 / -1; }
-.page-title { background: linear-gradient(transparent 72%, #c6f36b 72%, #c6f36b 94%, transparent 94%); }
+.page-title { background: linear-gradient(transparent 72%, #c6f36b 84%, #c6f36b 94%, transparent 94%); }
 .content-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 2rem; padding-block: 3rem; border-bottom: 1px solid var(--color-border); }
 .content-section :where(h2) { margin: 0; font-weight: 500; letter-spacing: -.04em; }
 .content-section-body { min-width: 0; }
