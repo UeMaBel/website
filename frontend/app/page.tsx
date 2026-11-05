@@ -32,16 +32,18 @@ export default async function HomePage() {
         <div className="hero-copy">
           <p className="eyebrow">
             <span className="status-dot" />{" "}
-            {profile?.display_name.trim() || "Freelance software developer"}
+            {profile?.display_name.trim() ||
+              "Freelance software developer and data engineer"}
           </p>
-          <h1 id="hero-title">
+          <h1 id="hero-title">  
             Grounded in fundamentals, <span>accelerated by AI.</span>
           </h1>
           <p className="hero-description">
-            I build data platforms and applications that help companies get
-            things done. From the first idea to keeping things running. I also
-            spend a lot of time exploring AI, coding agents and the occasional
-            rabbit hole.
+            I build data platforms and applications that connect industrial
+            systems and turn production data into something people can use
+            in their daily work. From the first idea to keeping things running.
+            I also spend a lot of time exploring AI and coding agents, often
+            following a rabbit hole further than I planned.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link className="button-primary" href="/projects">
