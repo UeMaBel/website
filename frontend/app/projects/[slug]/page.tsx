@@ -63,7 +63,13 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
     return (
       <article className="project-detail">
-        <PageHeading title={project.title} />
+        <PageHeading title={project.title}>
+          {project.technologies.length > 0 && (
+            <ul className="project-detail-technologies" aria-label="Technologies">
+              {project.technologies.map((technology) => <li key={technology}>{technology}</li>)}
+            </ul>
+          )}
+        </PageHeading>
 
         {project.problem.trim() && (
           <section aria-labelledby="project-problem-heading">
@@ -76,15 +82,6 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           <section aria-labelledby="project-contribution-heading">
             <h2 id="project-contribution-heading">My contribution</h2>
             <Markdown source={project.contribution} />
-          </section>
-        )}
-
-        {project.technologies.length > 0 && (
-          <section aria-labelledby="project-technologies-heading">
-            <h2 id="project-technologies-heading">Technologies</h2>
-            <ul className="project-detail-technologies">
-              {project.technologies.map((technology) => <li key={technology}>{technology}</li>)}
-            </ul>
           </section>
         )}
 

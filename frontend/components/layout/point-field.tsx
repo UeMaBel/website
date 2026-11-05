@@ -32,6 +32,9 @@ export function PointField() {
     }] : []));
     let width = 0;
     let height = 0;
+    let centerX = 0;
+    let centerY = 0;
+    let radius = 0;
     let frame = 0;
     let elapsed = 0;
     let previous = 0;
@@ -40,10 +43,6 @@ export function PointField() {
     function draw() {
       if (!context) return;
       context.clearRect(0, 0, width, height);
-      const mobile = width < 1024;
-      const centerX = mobile ? width * 0.5 : width * 0.77;
-      const centerY = mobile ? height - 220 : height * 0.43;
-      const radius = Math.min(mobile ? width * 0.34 : width * 0.175, 210);
       const progress = reducedMotion.matches ? 1 : Math.min(elapsed / 3200, 1);
       const assembly = progress * progress * (3 - 2 * progress);
       const positions = nodes.map(node => ({
@@ -97,6 +96,13 @@ export function PointField() {
       if (!canvas || !context || !hero) return;
       width = hero.clientWidth;
       height = hero.clientHeight;
+      const slot = canvas.parentElement;
+      if (!slot) return;
+      const heroBounds = hero.getBoundingClientRect();
+      const slotBounds = slot.getBoundingClientRect();
+      centerX = slotBounds.left - heroBounds.left + slotBounds.width / 2;
+      centerY = slotBounds.top - heroBounds.top + slotBounds.height / 2;
+      radius = Math.min(slotBounds.width * 0.4, slotBounds.height * 0.55);
       const scale = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = width * scale;
       canvas.height = height * scale;
