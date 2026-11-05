@@ -11,7 +11,7 @@
   --color-focus: #175bb5;
   --color-border: #d8dfd5;
   --color-code: #edf0e9;
-  --page-gutter: clamp(1rem, 4vw, 2rem);
+  --page-gutter: 1.5rem;
 }
 
 * {
@@ -48,7 +48,7 @@ a:hover {
 
 .page-container {
   width: 100%;
-  max-width: 96rem;
+  max-width: 120rem;
   margin-inline: auto;
   padding-inline: var(--page-gutter);
 }
@@ -618,8 +618,8 @@ main:has(.landing) { padding-top: 0; }
 .discipline-strip { padding-block: 1.3rem; border-block: 1px solid var(--color-border); font: 500 .8rem/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .landing-section { padding-block: clamp(3.5rem, 7vw, 6rem); border-bottom: 1px solid var(--color-border); }
 .landing :where(h2) { margin: 0 0 1.5rem; font-weight: 500; font-size: clamp(1.9rem, 3vw, 3rem); letter-spacing: -.045em; line-height: 1.15; }
-.intro-copy { max-width: 40rem; font-size: 1.2rem; color: var(--color-muted); }
-.intro-biography { max-width: 40rem; color: var(--color-muted); }
+.intro-copy { font-size: 1.2rem; color: var(--color-muted); }
+.intro-biography { color: var(--color-muted); }
 .text-link { display: inline-flex; align-items: center; min-height: 44px; gap: 1.5rem; font-weight: 600; font-size: .85rem; text-decoration: none; }
 .text-link:hover { text-decoration: underline; }
 .section-top { margin-bottom: 2rem; }
@@ -660,6 +660,8 @@ main:has(.landing) { padding-top: 0; }
 .navigation a:hover { text-decoration: underline; }
 @media (max-width: 63.99rem) { .hero { padding-block: 3rem; min-height: auto; } }
 @media (max-width: 40rem) {
+  :root { --page-gutter: 1rem; }
+
   .hero { gap: 1rem; }
 
   .discipline-strip > span[aria-hidden] { display: none; }
