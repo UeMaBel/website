@@ -4,7 +4,7 @@ import { SiteHeader } from "./site-header";
 
 test("readers can find each public destination through the main navigation", () => {
   render(<SiteHeader />);
-  expect(screen.getByRole("link", { name: "[m.] Home" }).getAttribute("href")).toBe("/");
+  expect(screen.getByRole("link", { name: "Matthias Uebelacker — Home" }).getAttribute("href")).toBe("/");
   const navigation = screen.getByRole("navigation", { name: "Main navigation" });
 
   for (const [name, href] of [
@@ -14,6 +14,6 @@ test("readers can find each public destination through the main navigation", () 
     ["Projects", "/projects"],
     ["Contact", "/contact"],
   ]) {
-    expect(within(navigation).getByRole("link", { name }).getAttribute("href")).toBe(href);
+    expect(within(navigation).getByRole("link", { name: `[${name}]` }).getAttribute("href")).toBe(href);
   }
 });

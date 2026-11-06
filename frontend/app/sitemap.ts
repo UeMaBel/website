@@ -3,7 +3,7 @@ import { getBlogPosts, getProjects } from "../lib/api";
 import { getSiteUrl } from "../lib/metadata";
 
 const PAGE_SIZE = 100;
-const PUBLIC_PAGES = ["/", "/blog", "/about", "/projects", "/contact"];
+const PUBLIC_PAGES = ["/", "/blog", "/about", "/projects", "/contact", "/datenschutz"];
 
 async function getPublishedPosts() {
   const firstPage = await getBlogPosts({ page: 1, pageSize: PAGE_SIZE });

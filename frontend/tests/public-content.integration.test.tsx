@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import HomePage from "../app/page";
 import AboutPage from "../app/about/page";
 import ContactPage from "../app/contact/page";
+import DatenschutzPage from "../app/datenschutz/page";
 import ProjectsPage from "../app/projects/page";
 import BlogPage from "../app/blog/page";
 import BlogPostPage from "../app/blog/[slug]/page";
@@ -85,6 +86,30 @@ afterEach(() => {
 });
 
 describe("public content journeys", () => {
+  it("renders the DSGVO field as Markdown on the Datenschutz page", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({
+      ...profile(null),
+      dsgvo: "## Hosting\n\nStored **securely**.\nSecond line.\n\n[Email](mailto:privacy@example.test)",
+    }));
+    const { container } = render(await DatenschutzPage());
+    expect(screen.getByRole("heading", { level: 1, name: "Datenschutz" })).toBeTruthy();
+    const section = screen.getByRole("region", { name: "Datenschutzerklärung" });
+    expect(section.classList.contains("section-divider")).toBe(true);
+    expect(screen.getByText("securely").tagName).toBe("STRONG");
+    expect(container.querySelector(".markdown br")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Email" }).getAttribute("href")).toBe("mailto:privacy@example.test");
+  });
+
+  it("handles empty or unavailable privacy content", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ...profile(null), dsgvo: " \n " }));
+    const empty = render(await DatenschutzPage());
+    expect(screen.getByRole("status").textContent).toContain("Noch keine");
+    empty.unmount();
+    fetchMock.mockRejectedValueOnce(new Error("offline"));
+    render(await DatenschutzPage());
+    expect(screen.getByRole("alert").textContent).toContain("vorübergehend nicht verfügbar");
+  });
+
   it("preserves single line breaks in About Markdown without changing paragraphs or code", async () => {
     fetchMock.mockResolvedValue(jsonResponse({
       ...profile(null),
@@ -120,6 +145,30 @@ describe("public content journeys", () => {
     )));
     render(await ProjectsPage());
     expect(screen.getByText("experiments").tagName).toBe("STRONG");
+  });
+
+  it("renders Impressum Markdown below Get in touch only on the Contact page", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({
+      ...profile(null),
+      contact_introduction: "Business card details.",
+      impressum: "Responsible: **Site Owner**\nExample address",
+    }));
+    const contact = render(await ContactPage());
+    const card = screen.getByRole("region", { name: "Get in touch" });
+    const impressum = screen.getByRole("region", { name: "Impressum" });
+    expect(card.compareDocumentPosition(impressum) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(impressum.querySelector("strong")?.textContent).toBe("Site Owner");
+    expect(impressum.querySelector("br")).toBeTruthy();
+    contact.unmount();
+    render(await HomePage());
+    expect(screen.queryByRole("region", { name: "Impressum" })).toBeNull();
+    expect(screen.queryByText("Example address")).toBeNull();
+  });
+
+  it("hides an empty Impressum section", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ...profile(null), impressum: " \n " }));
+    render(await ContactPage());
+    expect(screen.queryByRole("region", { name: "Impressum" })).toBeNull();
   });
 
   it("keeps projects available when the optional profile request fails", async () => {

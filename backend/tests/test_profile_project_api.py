@@ -26,6 +26,8 @@ class PublicProfileApiTests(TestCase):
             'display_name': '',
             'biography': '',
             'contact_introduction': '',
+            'impressum': '',
+            'dsgvo': '',
             'projects_introduction': '',
             'email': '',
             'cv_url': None,
@@ -38,11 +40,15 @@ class PublicProfileApiTests(TestCase):
     def test_page_introductions_are_persisted_and_returned_as_markdown(self):
         profile = Profile.objects.create(
             contact_introduction='Get in **touch**.',
+            impressum='Responsible: **Site Owner**\nExample address',
+            dsgvo='## Hosting\nPrivacy details.',
             projects_introduction='## Things I build',
         )
         profile.refresh_from_db()
         data = self.client.get('/api/v1/profile/').json()
         self.assertEqual(data['contact_introduction'], profile.contact_introduction)
+        self.assertEqual(data['impressum'], profile.impressum)
+        self.assertEqual(data['dsgvo'], profile.dsgvo)
         self.assertEqual(data['projects_introduction'], profile.projects_introduction)
 
     def pdf_upload(self):

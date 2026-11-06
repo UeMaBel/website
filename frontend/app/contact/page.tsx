@@ -1,4 +1,6 @@
 import { PageHeading } from "../../components/content/page-heading";
+import { ContentSection } from "../../components/content/content-section";
+import { Markdown } from "../../components/content/markdown";
 import { ProfileContactDetails } from "../../components/content/profile-contact-details";
 import { getProfile } from "../../lib/api";
 import { publicPageMetadata } from "../../lib/metadata";
@@ -21,6 +23,11 @@ export default async function ContactPage() {
             <ProfileContactDetails introduction={profile.contact_introduction || ""} />
           </div>
         </section>
+        {profile.impressum?.trim() && (
+          <ContentSection id="impressum" title="Impressum">
+            <Markdown source={profile.impressum} />
+          </ContentSection>
+        )}
       </>
     );
   } catch {

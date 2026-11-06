@@ -835,3 +835,12 @@ h1 > :where(span) { background: linear-gradient(transparent 62%, #c6f36b 78%, #c
 .business-card > :where(h2) { margin: 0; font-size: 1.75rem; }
 .contact-person-copy .markdown :where(h1, h2, h3) { margin: 0 0 .85rem; font-size: 1.5rem; line-height: 1.2; }
 .markdown .markdown-icon { display: inline-block; width: 1.1em; height: 1.1em; max-width: none; margin-inline-end: .3em; vertical-align: -.15em; }
+
+.footer-legal { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin-inline-start: auto; flex-shrink: 0; }
+.footer-legal :where(a) { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-ink); text-decoration: none; }
+.footer-legal a:hover { text-decoration: underline; }
+@media (max-width: 40rem) {
+  .site-footer > :where(.page-container) { flex-wrap: wrap; gap: .25rem .65rem; }
+  .site-footer p { flex: 1; }
+  .footer-legal { flex-basis: 100%; padding-inline-start: calc(44px + .65rem); }
+}

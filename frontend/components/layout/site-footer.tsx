@@ -12,6 +12,10 @@ export function SiteFooter() {
         <p>
           <span>Personal website · Software engineering and technical writing</span>
         </p>
+        <nav className="footer-legal" aria-label="Legal information">
+          <Link href="/contact#impressum">Impressum</Link>
+          <Link href="/datenschutz">Datenschutz</Link>
+        </nav>
       </PageContainer>
     </footer>
   );

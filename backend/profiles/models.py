@@ -7,14 +7,33 @@ from uploads.models import UploadedMedia
 
 class Profile(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
-    display_name = models.CharField(max_length=200, blank=True)
-    biography = models.TextField(blank=True, help_text='Markdown source')
-    contact_introduction = models.TextField(blank=True, help_text='Markdown source for the Contact page')
-    projects_introduction = models.TextField(blank=True, help_text='Markdown source for the Projects overview')
-    email = models.EmailField(blank=True)
+    display_name = models.CharField(
+        'shared_display_name', max_length=200, blank=True,
+        help_text='Shown in the homepage introduction and on About / CV',
+    )
+    biography = models.TextField('about_biography', blank=True, help_text='Markdown source for the About / CV biography')
+    contact_introduction = models.TextField(
+        'contact_get_in_touch', blank=True,
+        help_text='Markdown source shared by Get in touch on Contact and the homepage contact panel',
+    )
+    impressum = models.TextField(
+        'contact_impressum', blank=True,
+        help_text='Markdown source shown below Get in touch on Contact only; hidden when empty',
+    )
+    dsgvo = models.TextField(
+        'datenschutz_dsgvo', blank=True,
+        help_text='Markdown source for the Datenschutz page, linked from the footer',
+    )
+    projects_introduction = models.TextField(
+        'projects_introduction', blank=True, help_text='Markdown source for the Projects overview',
+    )
+    email = models.EmailField(
+        'profile_email', blank=True,
+        help_text='Available through the profile API. Contact cards display only contact_get_in_touch Markdown.',
+    )
     cv = models.ForeignKey('uploads.UploadedMedia', null=True, blank=True,
                            on_delete=models.PROTECT, related_name='profiles',
-                           limit_choices_to={'kind': 'pdf'})
+                           limit_choices_to={'kind': 'pdf'}, verbose_name='about_cv')
 
     class Meta:
         constraints = [models.CheckConstraint(condition=models.Q(id=1), name='single_owner_profile')]
