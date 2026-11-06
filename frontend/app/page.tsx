@@ -199,7 +199,7 @@ export default async function HomePage() {
         </div>
         <div className="contact-details">
           {profile ? (
-            <ProfileContactDetails name={profile.display_name} email={profile.email} links={profile.links} />
+            <ProfileContactDetails introduction={profile.contact_introduction || ""} />
           ) : (
             <p className="profile-error" role="alert">
               Contact details are temporarily unavailable. Please try again

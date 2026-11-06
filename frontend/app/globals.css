@@ -824,12 +824,14 @@ h1 > :where(span) { background: linear-gradient(transparent 62%, #c6f36b 78%, #c
 .contact-person { display: grid; grid-template-columns: 5rem minmax(0, 1fr); align-items: start; gap: 1rem; }
 .contact-portrait { display: block; width: 5rem; height: 5rem; object-fit: cover; border-radius: 50%; border: 1px solid var(--color-border); }
 .contact-person-copy { min-width: 0; }
-.contact-person-name { margin: 0 0 .65rem; font-family: var(--font-headline), sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
-.contact-person .profile-contact-links > p { margin-bottom: .75rem; }
+.business-card { padding: clamp(1.5rem, 4vw, 3rem); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: .5rem; }
+.contact-person-copy .markdown > :last-child { margin-bottom: 0; }
 @media (max-width: 40rem) {
   .contact-person { grid-template-columns: 4rem minmax(0, 1fr); gap: .75rem; }
   .contact-portrait { width: 4rem; height: 4rem; }
-  .contact-person-copy { display: contents; }
-  .contact-person-name { align-self: center; margin: 0; }
-  .contact-person .profile-contact-links { grid-column: 1 / -1; }
+  .contact-person { grid-template-columns: minmax(0, 1fr); }
 }
+
+.business-card > :where(h2) { margin: 0; font-size: 1.75rem; }
+.contact-person-copy .markdown :where(h1, h2, h3) { margin: 0 0 .85rem; font-size: 1.5rem; line-height: 1.2; }
+.markdown .markdown-icon { display: inline-block; width: 1.1em; height: 1.1em; max-width: none; margin-inline-end: .3em; vertical-align: -.15em; }

@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
+import remarkBreaks from "remark-breaks";
 
 const components: Components = {
   pre({ children }) {
@@ -15,11 +16,11 @@ const components: Components = {
     }
     return (
       // biome-ignore lint/performance/noImgElement: Markdown uploads have no intrinsic dimensions; use the public media URL without an optimization proxy.
-      <img src={src} alt={alt} title={title} loading="lazy" decoding="async" />
+      <img src={src} alt={alt} title={title} className={src === "/icons/email.svg" || src === "/icons/github.svg" ? "markdown-icon" : undefined} loading="lazy" decoding="async" />
     );
   },
 };
 
 export function Markdown({ source }: { source: string }) {
-  return <div className="markdown"><ReactMarkdown skipHtml components={components}>{source}</ReactMarkdown></div>;
+  return <div className="markdown"><ReactMarkdown skipHtml remarkPlugins={[remarkBreaks]} components={components}>{source}</ReactMarkdown></div>;
 }

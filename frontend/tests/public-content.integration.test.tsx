@@ -85,14 +85,33 @@ afterEach(() => {
 });
 
 describe("public content journeys", () => {
+  it("preserves single line breaks in About Markdown without changing paragraphs or code", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({
+      ...profile(null),
+      biography: "First **line**.\nSecond line.\r\nThird line.\n\nAnother paragraph.\n\n```text\nfirst\nsecond\n```",
+    }));
+    const { container } = render(await AboutPage());
+    const biography = container.querySelector(".markdown");
+    expect(biography?.querySelectorAll("p")).toHaveLength(2);
+    expect(biography?.querySelectorAll("p:first-child br")).toHaveLength(2);
+    expect(biography?.querySelector("strong")?.textContent).toBe("line");
+    expect(biography?.querySelector("pre code")?.textContent).toBe("first\nsecond\n");
+    expect(biography?.querySelector("pre br")).toBeNull();
+  });
+
   it("renders backend Markdown introductions on Contact and Projects", async () => {
     fetchMock.mockResolvedValue(jsonResponse({
       ...profile(null),
-      contact_introduction: "Let's **build** something.",
+      contact_introduction: "## My business card\n\nLet's **build** something.\n\n![Email](/icons/email.svg) [Write to me](mailto:hello@example.test)\n![GitHub](/icons/github.svg) [My GitHub](https://github.com/example)",
       projects_introduction: "Explore my **experiments**.",
     }));
     const contact = render(await ContactPage());
     expect(screen.getByText("build").tagName).toBe("STRONG");
+    expect(screen.getByRole("heading", { name: "Get in touch" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "My business card" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Email" }).className).toBe("markdown-icon");
+    expect(screen.getByRole("img", { name: "GitHub" }).className).toBe("markdown-icon");
+    expect(screen.getByRole("link", { name: "Write to me" }).getAttribute("href")).toBe("mailto:hello@example.test");
     contact.unmount();
     fetchMock.mockImplementation((url: URL) => Promise.resolve(jsonResponse(
       url.pathname === "/api/v1/projects/"
@@ -114,15 +133,19 @@ describe("public content journeys", () => {
   });
 
   it("lets readers navigate from the home page to public sections", async () => {
-    fetchMock.mockResolvedValue(jsonResponse(profile(null)));
+    fetchMock.mockResolvedValue(jsonResponse({
+      ...profile(null),
+      contact_introduction: "Contact me at [hello@example.test](mailto:hello@example.test).",
+    }));
 
     render(await HomePage());
 
     expect(screen.getByRole("link", { name: "Read the blog" }).getAttribute("href")).toBe("/blog");
     expect(screen.getByRole("link", { name: "Projects" }).getAttribute("href")).toBe("/projects");
     expect(screen.getByRole("link", { name: "About / CV" }).getAttribute("href")).toBe("/about");
-    expect(screen.getByRole("link", { name: "owner@example.test" }).getAttribute("href")).toBe("mailto:owner@example.test");
-    expect(screen.getByRole("link", { name: "Professional profile" }).getAttribute("href")).toBe("https://example.test/owner");
+    expect(screen.getByRole("link", { name: "hello@example.test" }).getAttribute("href")).toBe("mailto:hello@example.test");
+    expect(screen.queryByRole("link", { name: "owner@example.test" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Professional profile" })).toBeNull();
   });
 
   it("keeps the selected tag in blog pagination links", async () => {
