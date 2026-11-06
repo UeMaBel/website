@@ -1,140 +1,70 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
-
-const navigation = vi.hoisted(() => ({ pathname: "/" }));
-
-vi.mock("next/navigation", () => ({
-  usePathname: () => navigation.pathname,
-}));
-
-vi.mock("next/script", async () => {
-  const React = await import("react");
-  return {
-    default: (props: Record<string, unknown>) => React.createElement("button", {
-      type: "button",
-      id: props.id as string,
-      src: props.src as string,
-      "data-testid": "umami-script",
-      "data-website-id": props["data-website-id"] as string,
-      "data-auto-track": props["data-auto-track"] as string,
-      "data-do-not-track": props["data-do-not-track"] as string,
-      onClick: props.onReady as (() => void) | undefined,
-      onDoubleClick: props.onError as (() => void) | undefined,
-    }),
-  };
-});
-
+import { StrictMode } from "react";
+import { act, cleanup, render } from "@testing-library/react";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { PageViewTracker } from "./page-view-tracker";
-
-const config = {
-  enabled: true,
-  scriptUrl: "https://analytics.example.test/script.js",
-  siteOrigin: "https://site.example.test",
-  websiteId: "synthetic-website",
-};
-
-function loadScript(): void {
-  fireEvent.click(screen.getByTestId("umami-script"));
+const navigation = vi.hoisted(() => ({ pathname: "/" }));
+vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname }));
+let fetchMock: ReturnType<typeof vi.fn>;
+function visible(value: "visible" | "hidden") {
+  Object.defineProperty(document, "visibilityState", { configurable: true, value });
+  act(() => document.dispatchEvent(new Event("visibilitychange")));
 }
-
+function tick(ms: number) { act(() => vi.advanceTimersByTime(ms)); }
+function contributions() { return fetchMock.mock.calls.map(call => JSON.parse(call[1].body)); }
 beforeEach(() => {
+  vi.useFakeTimers(); vi.setSystemTime(0);
+  vi.spyOn(performance, "now").mockImplementation(() => Date.now());
   navigation.pathname = "/";
-  delete window.umami;
-  Object.defineProperty(document, "referrer", {
-    configurable: true,
-    value: "https://news.example/story?email=reader@example.test",
-  });
+  Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+  Object.defineProperty(document, "referrer", { configurable: true, value: "https://github.com/private?token=secret" });
+  Object.defineProperty(navigator, "doNotTrack", { configurable: true, value: "0" });
+  fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+  vi.stubGlobal("fetch", fetchMock);
 });
-
-test("tracks the initial public route and one view per pathname transition", () => {
-  const track = vi.fn().mockResolvedValue(undefined);
-  window.umami = { track };
-  const view = render(<PageViewTracker {...config} />);
-  const script = screen.getByTestId("umami-script");
-  expect(script.getAttribute("src")).toBe(config.scriptUrl);
-  expect(script.getAttribute("data-auto-track")).toBe("false");
-  expect(script.getAttribute("data-do-not-track")).toBe("true");
-  expect(track).not.toHaveBeenCalled();
-
-  navigation.pathname = "/blog/a-public-post";
-  view.rerender(<PageViewTracker {...config} />);
-  expect(track).not.toHaveBeenCalled();
-
-  act(loadScript);
-  expect(track).toHaveBeenCalledTimes(2);
-  expect(track).toHaveBeenNthCalledWith(1, {
-    website: "synthetic-website",
-    hostname: window.location.hostname,
-    url: "/",
-    title: "Home",
-    referrer: "https://news.example",
-  });
-  expect(track).toHaveBeenLastCalledWith({
-    website: "synthetic-website",
-    hostname: window.location.hostname,
-    url: "/blog/a-public-post",
-    title: "Blog article",
-  });
-
-  // Query/hash changes and rerenders do not change usePathname or add views.
-  view.rerender(<PageViewTracker {...config} />);
-  expect(track).toHaveBeenCalledTimes(2);
-
-  navigation.pathname = "/";
-  view.rerender(<PageViewTracker {...config} />);
-  expect(track).toHaveBeenCalledTimes(3);
-  expect(track).toHaveBeenNthCalledWith(3, {
-    website: "synthetic-website",
-    hostname: window.location.hostname,
-    url: "/",
-    title: "Home",
-  });
-
-  navigation.pathname = "/blog/draft-secret/preview";
-  view.rerender(<PageViewTracker {...config} />);
-  expect(screen.queryByTestId("umami-script")).toBeNull();
-  expect(track).toHaveBeenCalledTimes(3);
-
-  navigation.pathname = "/";
-  view.rerender(<PageViewTracker {...config} />);
-  expect(track).toHaveBeenCalledTimes(4);
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); });
+test("counts once in StrictMode and never loads an external script", () => {
+  const view = render(<StrictMode><PageViewTracker enabled /></StrictMode>);
+  expect(contributions()).toEqual([{ path: "/", referrer: "github", views: 1, seconds: 0 }]);
+  expect(view.container.querySelector("script")).toBeNull();
+  expect(JSON.stringify(contributions())).not.toContain("private");
 });
-
-test("does not load or track preview, admin, API, or nested routes", () => {
-  navigation.pathname = "/blog/draft-secret/preview";
-  const track = vi.fn().mockResolvedValue(undefined);
-  window.umami = { track };
-  const view = render(<PageViewTracker {...config} />);
-  expect(screen.queryByTestId("umami-script")).toBeNull();
-
-  navigation.pathname = "/admin/";
-  view.rerender(<PageViewTracker {...config} />);
-  navigation.pathname = "/api/v1/profile/";
-  view.rerender(<PageViewTracker {...config} />);
-  expect(screen.queryByTestId("umami-script")).toBeNull();
-  expect(track).not.toHaveBeenCalled();
-
-  navigation.pathname = "/about";
-  view.rerender(<PageViewTracker {...config} />);
-  act(loadScript);
-  expect(track).toHaveBeenCalledOnce();
-  expect(track).toHaveBeenCalledWith(expect.objectContaining({ url: "/about", title: "About" }));
+test("counts visible time approximately, pauses hidden tabs, and flushes on route change", () => {
+  const view = render(<PageViewTracker enabled />);
+  tick(12_000); visible("hidden");
+  expect(contributions().at(-1)).toEqual({ path: "/", referrer: "github", views: 0, seconds: 10 });
+  const count = fetchMock.mock.calls.length;
+  tick(60_000); expect(fetchMock).toHaveBeenCalledTimes(count);
+  visible("visible"); tick(8_000);
+  navigation.pathname = "/blog/public-post";
+  view.rerender(<PageViewTracker enabled />);
+  expect(contributions().slice(-2)).toEqual([
+    { path: "/", referrer: "github", views: 0, seconds: 10 },
+    { path: "/blog/public-post", referrer: "direct", views: 1, seconds: 0 },
+  ]);
+  view.rerender(<PageViewTracker enabled />);
+  expect(contributions().filter(c => c.views === 1)).toHaveLength(2);
 });
-
-test("stays disabled without explicit configuration and survives script failure", () => {
-  const track = vi.fn().mockResolvedValue(undefined);
-  window.umami = { track };
-  const disabled = render(<PageViewTracker {...config} enabled={false} />);
-  expect(screen.queryByTestId("umami-script")).toBeNull();
-  disabled.unmount();
-
-  const missingId = render(<PageViewTracker {...config} websiteId="" />);
-  expect(screen.queryByTestId("umami-script")).toBeNull();
-  missingId.unmount();
-
-  const view = render(<PageViewTracker {...config} />);
-  fireEvent.doubleClick(screen.getByTestId("umami-script"));
-  navigation.pathname = "/blog";
-  expect(() => view.rerender(<PageViewTracker {...config} />)).not.toThrow();
-  expect(track).not.toHaveBeenCalled();
+test("flushes pagehide once, resumes bfcache without another pageview, and caps idle time", () => {
+  render(<PageViewTracker enabled />);
+  tick(11_000);
+  act(() => window.dispatchEvent(new Event("pagehide")));
+  act(() => window.dispatchEvent(new Event("pagehide")));
+  expect(contributions()).toHaveLength(2);
+  act(() => window.dispatchEvent(new Event("pageshow")));
+  tick(31 * 60_000);
+  expect(contributions().filter(c => c.views === 1)).toHaveLength(1);
+  expect(contributions().reduce((sum, c) => sum + c.seconds, 0)).toBe(1800);
+});
+test("does not send when disabled, private, hidden initially, or DNT is enabled", () => {
+  let view = render(<PageViewTracker enabled={false} />); view.unmount();
+  navigation.pathname = "/blog/secret/preview";
+  view = render(<PageViewTracker enabled />); view.unmount();
+  navigation.pathname = "/"; visible("hidden");
+  view = render(<PageViewTracker enabled />);
+  expect(fetchMock).not.toHaveBeenCalled();
+  visible("visible"); expect(fetchMock).toHaveBeenCalledOnce(); view.unmount();
+  fetchMock.mockClear();
+  Object.defineProperty(navigator, "doNotTrack", { configurable: true, value: "1" });
+  render(<PageViewTracker enabled />); tick(60_000);
+  expect(fetchMock).not.toHaveBeenCalled();
 });

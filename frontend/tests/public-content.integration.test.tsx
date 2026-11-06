@@ -80,7 +80,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete window.umami;
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -304,8 +303,6 @@ describe("public content journeys", () => {
       demo_url: "https://example.test/demo",
     })));
 
-    const track = vi.fn().mockResolvedValue(undefined);
-    window.umami = { getSession: () => ({ website: "synthetic-website" }), track };
     render(await ProjectDetailPage({ params: Promise.resolve({ slug: "sample-project" }) }));
 
     const repositoryLink = screen.getByRole("link", { name: "Source repository" });
@@ -315,15 +312,6 @@ describe("public content journeys", () => {
     expect(repositoryLink.getAttribute("target")).toBe("_blank");
     expect(fireEvent.click(repositoryLink)).toBe(true);
     expect(fireEvent.click(demoLink)).toBe(true);
-    expect(track).toHaveBeenNthCalledWith(1, expect.objectContaining({
-      name: "outbound_interest",
-      data: { category: "repository" },
-    }));
-    expect(track).toHaveBeenNthCalledWith(2, expect.objectContaining({
-      name: "outbound_interest",
-      data: { category: "demo" },
-    }));
-    expect(JSON.stringify(track.mock.calls)).not.toContain("example.test");
-    expect(JSON.stringify(track.mock.calls)).not.toContain("Source repository");
+
   });
 });

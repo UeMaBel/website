@@ -1,34 +1,9 @@
-"use client";
-
 import type { ReactNode } from "react";
-import {
-  sendOutboundInterest,
-  type OutboundInterestCategory,
-} from "../../lib/analytics";
-
 interface OutboundAnchorProps {
-  href: string;
-  category: OutboundInterestCategory;
-  children: ReactNode;
-  target?: string;
-  rel?: string;
+  href: string; category: "contact_email" | "contact_profile" | "repository" | "demo";
+  children: ReactNode; target?: string; rel?: string;
 }
-
-export function OutboundAnchor({
-  href,
-  category,
-  children,
-  target,
-  rel,
-}: OutboundAnchorProps) {
-  return (
-    <a
-      href={href}
-      target={target}
-      rel={rel}
-      onClick={() => sendOutboundInterest(window.umami, category)}
-    >
-      {children}
-    </a>
-  );
+// Outbound links no longer produce analytics events.
+export function OutboundAnchor({ href, children, target, rel }: OutboundAnchorProps) {
+  return <a href={href} target={target} rel={rel}>{children}</a>;
 }

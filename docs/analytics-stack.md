@@ -1,3 +1,5 @@
+> Retired integration: the website now uses [aggregate-only React/Django statistics](analytics.md). This document is retained for operating or retiring historical Umami data. Do not reconnect its tracker to the website.
+
 # Independent local Umami stack
 
 The website's analytics service runs as an independent Compose project. It has

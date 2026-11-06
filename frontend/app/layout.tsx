@@ -36,10 +36,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Read analytics configuration per request so standalone images can receive
   // runtime values without baking public analytics settings into the build.
   await headers();
-  const analyticsEnabled = process.env.UMAMI_ENABLED?.trim().toLowerCase() === "true";
-  const analyticsScriptUrl = process.env.UMAMI_SCRIPT_URL?.trim() ?? "";
-  const analyticsWebsiteId = process.env.UMAMI_WEBSITE_ID?.trim() ?? "";
-  const publicSiteOrigin = getPublicSiteOrigin().origin;
+  const analyticsEnabled = process.env.STATISTICS_ENABLED?.trim().toLowerCase() !== "false";
 
   return (
     <html lang="en" className={`${headlineFont.variable} ${readingFont.variable} ${monoFont.variable}`}>
@@ -48,9 +45,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <SiteHeader />
         <PageViewTracker
           enabled={analyticsEnabled}
-          scriptUrl={analyticsScriptUrl}
-          siteOrigin={publicSiteOrigin}
-          websiteId={analyticsWebsiteId}
         />
         <main id="main-content" tabIndex={-1}>
           <PageContainer>{children}</PageContainer>

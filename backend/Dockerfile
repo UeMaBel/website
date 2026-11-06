@@ -58,4 +58,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
     CMD ["python", "-c", "from urllib.request import urlopen; response = urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=2); exit(0 if response.status == 200 else 1)"]
 
-CMD ["gunicorn", "--bind=0.0.0.0:8000", "--workers=2", "--access-logfile=-", "--error-logfile=-", "config.wsgi:application"]
+CMD ["gunicorn", "--bind=0.0.0.0:8000", "--workers=2", "--error-logfile=-", "config.wsgi:application"]

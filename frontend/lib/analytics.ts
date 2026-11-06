@@ -1,171 +1,42 @@
-export interface PageViewPayload {
-  website: string;
-  hostname: string;
-  url: string;
-  title: string;
-  referrer?: string;
+export const REFERRER_SOURCES = ["direct", "google", "bing", "duckduckgo", "github", "linkedin", "other"] as const;
+export type ReferrerSource = typeof REFERRER_SOURCES[number];
+export interface StatisticsContribution { path: string; referrer: ReferrerSource; views: number; seconds: number; }
+const PUBLIC_PATHS = new Set(["/", "/about", "/blog", "/projects", "/contact", "/datenschutz"]);
+export function isPublicAnalyticsPath(path: string): boolean {
+  return path.length <= 280 && (PUBLIC_PATHS.has(path) || /^\/(blog|projects)\/[a-zA-Z0-9_-]{1,250}$/.test(path));
 }
-
-export type OutboundInterestCategory =
-  | "contact_email"
-  | "contact_profile"
-  | "repository"
-  | "demo";
-
-export interface OutboundInterestData {
-  category: OutboundInterestCategory;
-}
-
-export interface OutboundInterestPayload extends PageViewPayload {
-  name: "outbound_interest";
-  data: OutboundInterestData;
-}
-
-export interface UmamiTracker {
-  track: {
-    (payload: PageViewPayload): void | Promise<void>;
-    (payload: OutboundInterestPayload): void | Promise<void>;
-  };
-  getSession?: () => { website: string | null };
-}
-
-const STATIC_PAGE_TITLES: Record<string, string> = {
-  "/": "Home",
-  "/about": "About",
-  "/blog": "Blog",
-  "/contact": "Contact",
-  "/projects": "Projects",
-};
-
-export function getUmamiScriptUrl(value: string | undefined, siteOrigin?: string): string | null {
-  if (!value?.trim()) return null;
-
+// Never transmit arbitrary referrer URLs, hostnames, paths, or query strings.
+export function referrerSource(value: string, siteOrigin: string): ReferrerSource {
+  if (!value) return "direct";
   try {
-    const url = new URL(value.trim());
-    const site = siteOrigin ? new URL(siteOrigin) : null;
-    const isLoopback =
-      url.hostname === "localhost" ||
-      url.hostname.endsWith(".localhost") ||
-      url.hostname === "127.0.0.1" ||
-      url.hostname === "[::1]";
-    if (
-      (url.protocol !== "http:" && url.protocol !== "https:") ||
-      (url.protocol === "http:" && !isLoopback) ||
-      url.username ||
-      url.password ||
-      url.pathname !== "/script.js" ||
-      url.search ||
-      url.hash ||
-      url.origin === site?.origin
-    ) {
-      return null;
-    }
-    return url.toString();
-  } catch {
-    return null;
-  }
+    const url = new URL(value);
+    if (url.origin === siteOrigin) return "direct";
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return "other";
+    const hosts: Record<string, ReferrerSource> = {
+      "google.com": "google", "www.google.com": "google", "google.de": "google", "www.google.de": "google",
+      "bing.com": "bing", "www.bing.com": "bing", "duckduckgo.com": "duckduckgo", "www.duckduckgo.com": "duckduckgo",
+      "github.com": "github", "www.github.com": "github", "linkedin.com": "linkedin", "www.linkedin.com": "linkedin",
+    };
+    return Object.hasOwn(hosts, url.hostname) ? hosts[url.hostname] : "other";
+  } catch { return "other"; }
 }
-
-export function isPublicAnalyticsPath(pathname: string): boolean {
-  if (!pathname.startsWith("/") || pathname.includes("?") || pathname.includes("#")) {
-    return false;
-  }
-
-  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  if (Object.hasOwn(STATIC_PAGE_TITLES, normalized)) return true;
-
-  // Dynamic pages use Django slugs. This excludes preview, admin, API, and
-  // arbitrary nested paths while retaining stable public blog/project routes.
-  return /^\/(?:blog|projects)\/[a-zA-Z0-9_-]+$/.test(normalized);
+export function validContribution(value: unknown): value is StatisticsContribution {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const data = value as Record<string, unknown>;
+  return Object.keys(data).sort().join(",") === "path,referrer,seconds,views"
+    && typeof data.path === "string" && isPublicAnalyticsPath(data.path)
+    && REFERRER_SOURCES.some(source => source === data.referrer)
+    && (data.views === 0 || data.views === 1)
+    && typeof data.seconds === "number" && Number.isInteger(data.seconds)
+    && data.seconds >= 0 && data.seconds <= 30 && data.seconds % 5 === 0
+    && (data.views === 1 ? data.seconds === 0 : data.seconds > 0);
 }
-
-function pageTitle(pathname: string): string | null {
-  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  const staticTitle = STATIC_PAGE_TITLES[normalized];
-  if (staticTitle) return staticTitle;
-  if (/^\/blog\/[a-zA-Z0-9_-]+$/.test(normalized)) return "Blog article";
-  if (/^\/projects\/[a-zA-Z0-9_-]+$/.test(normalized)) return "Project";
-  return null;
-}
-
-export function sanitizeExternalReferrer(
-  value: string | undefined,
-  siteOrigin: string,
-): string | undefined {
-  if (!value) return undefined;
-
+export function sendContribution(data: StatisticsContribution): void {
   try {
-    const origin = new URL(siteOrigin).origin;
-    const referrer = new URL(value);
-    if (
-      (referrer.protocol !== "http:" && referrer.protocol !== "https:") ||
-      referrer.username ||
-      referrer.password ||
-      referrer.origin === origin
-    ) {
-      return undefined;
-    }
-    return referrer.origin;
-  } catch {
-    return undefined;
-  }
-}
-
-export function createPageViewPayload(
-  pathname: string,
-  website: string,
-  hostname: string,
-  siteOrigin: string,
-  externalReferrer?: string,
-): PageViewPayload | null {
-  const title = pageTitle(pathname);
-  if (!title || !website || !hostname) return null;
-
-  const payload: PageViewPayload = {
-    website,
-    hostname,
-    url: pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname,
-    title,
-  };
-  const referrer = sanitizeExternalReferrer(externalReferrer, siteOrigin);
-  if (referrer) payload.referrer = referrer;
-  return payload;
-}
-
-export function sendPageView(tracker: UmamiTracker | undefined, payload: PageViewPayload): void {
-  try {
-    const result = tracker?.track(payload);
-    if (result) void Promise.resolve(result).catch(() => {});
-  } catch {
-    // Analytics is optional and must not affect navigation or rendering.
-  }
-}
-
-export function sendOutboundInterest(
-  tracker: UmamiTracker | undefined,
-  category: OutboundInterestCategory,
-): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    const website = tracker?.getSession?.().website;
-    if (!tracker || !website) return;
-
-    const page = createPageViewPayload(
-      window.location.pathname,
-      website,
-      window.location.hostname,
-      window.location.origin,
-    );
-    if (!page) return;
-
-    const result = tracker.track({
-      ...page,
-      name: "outbound_interest",
-      data: { category },
-    });
-    if (result) void Promise.resolve(result).catch(() => {});
-  } catch {
-    // Outbound navigation must continue even when analytics is unavailable.
-  }
+    // sendBeacon includes credentials; fetch lets us explicitly omit cookies.
+    void fetch("/stats/collect", {
+      method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "application/json" },
+      credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", keepalive: true,
+    }).catch(() => {});
+  } catch { /* Statistics must never interrupt the site. No retries or stored queue. */ }
 }

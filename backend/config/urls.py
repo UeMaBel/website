@@ -20,9 +20,11 @@ from django.urls import path
 from blog.views import draft_blog_preview, public_blog_detail, public_blog_list, public_blog_tags
 from profiles.views import public_profile
 from projects.views import public_project_detail, public_project_list
+from site_statistics.views import collect
 from .views import health
 
 urlpatterns = [
+    path('api/v1/statistics/', collect, name='collect-statistics'),
     path("api/v1/health/", health, name="health"),
     path('api/v1/blog/posts/', public_blog_list, name='public-blog-list'),
     path('api/v1/blog/posts/<slug:slug>/', public_blog_detail, name='public-blog-detail'),

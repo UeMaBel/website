@@ -63,6 +63,7 @@ SECURE_HSTS_PRELOAD = _env_bool("DJANGO_SECURE_HSTS_PRELOAD")
 # Application definition
 
 INSTALLED_APPS = [
+    'site_statistics.apps.SiteStatisticsConfig',
     'profiles.apps.ProfilesConfig',
     'uploads.apps.UploadsConfig',
     'blog.apps.BlogConfig',
@@ -76,6 +77,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'site_statistics.middleware.DiscardStatisticsIdentity',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -168,5 +170,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
 MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL", "/media/")
 UPLOAD_MAX_BYTES = int(os.environ.get("DJANGO_UPLOAD_MAX_BYTES", "10485760"))
+STATISTICS_ENABLED = _env_bool("STATISTICS_ENABLED", "true")
 if UPLOAD_MAX_BYTES <= 0:
     raise ImproperlyConfigured("DJANGO_UPLOAD_MAX_BYTES must be positive")

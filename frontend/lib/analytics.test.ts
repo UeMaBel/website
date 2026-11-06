@@ -1,155 +1,34 @@
-import { expect, test, vi } from "vitest";
-import {
-  createPageViewPayload,
-  getUmamiScriptUrl,
-  isPublicAnalyticsPath,
-  sanitizeExternalReferrer,
-  sendOutboundInterest,
-  sendPageView,
-} from "./analytics";
-
-test.each([
-  "/",
-  "/about",
-  "/contact",
-  "/blog",
-  "/blog/a-public-post",
-  "/projects",
-  "/projects/a-public-project",
-])("allows public analytics path %s", (pathname) => {
-  expect(isPublicAnalyticsPath(pathname)).toBe(true);
+import { expect, test, vi, afterEach } from "vitest";
+import { isPublicAnalyticsPath, referrerSource, validContribution, sendContribution } from "./analytics";
+afterEach(() => vi.unstubAllGlobals());
+test("allows only public page paths without queries, fragments or preview routes", () => {
+  for (const path of ["/", "/about", "/datenschutz", "/blog/post", "/projects/project"]) expect(isPublicAnalyticsPath(path)).toBe(true);
+  for (const path of ["/admin", "/api/v1/profile/", "/blog/post/preview", "/blog?email=a@b.de", "/blog/post#secret", "/unknown"]) expect(isPublicAnalyticsPath(path)).toBe(false);
 });
-
-test.each([
-  "/admin/",
-  "/api/v1/profile/",
-  "/blog/a-draft/preview",
-  "/blog/a-post/preview/",
-  "/projects/a/nested-path",
-  "/unknown",
-  "/blog/private%2Fvalue",
-  "/blog?tag=private",
-])("rejects non-public analytics path %s", (pathname) => {
-  expect(isPublicAnalyticsPath(pathname)).toBe(false);
+test("reduces referrers to a fixed source vocabulary, including unknown private hostnames", () => {
+  expect(referrerSource("https://www.google.de/search?q=private", "https://site.test")).toBe("google");
+  expect(referrerSource("https://github.com/user/private?token=x", "https://site.test")).toBe("github");
+  expect(referrerSource("https://person-123.private.example/path", "https://site.test")).toBe("other");
+  expect(referrerSource("https://google.com.evil.test", "https://site.test")).toBe("other");
+  expect(referrerSource("https://person:password@github.com", "https://site.test")).toBe("other");
+  expect(referrerSource("https://site.test/blog", "https://site.test")).toBe("direct");
+  expect(referrerSource("", "https://site.test")).toBe("direct");
 });
-
-test("accepts only an absolute script.js URL without credentials or query data", () => {
-  expect(getUmamiScriptUrl(" http://analytics.localhost:3000/script.js ", "http://localhost:3000")).toBe(
-    "http://analytics.localhost:3000/script.js",
-  );
-  expect(getUmamiScriptUrl("javascript:alert(1)", "https://site.example")).toBeNull();
-  expect(getUmamiScriptUrl("http://analytics.example/script.js", "https://site.example")).toBeNull();
-  expect(getUmamiScriptUrl("https://user:password@analytics.example/script.js", "https://site.example")).toBeNull();
-  expect(getUmamiScriptUrl("https://analytics.example/script.js?website=secret", "https://site.example")).toBeNull();
-  expect(getUmamiScriptUrl("https://analytics.example/other.js", "https://site.example")).toBeNull();
-  expect(getUmamiScriptUrl("https://site.example/script.js", "https://site.example")).toBeNull();
+test("rejects arbitrary identity fields and invalid time increments", () => {
+  const view = { path: "/", referrer: "direct", views: 1, seconds: 0 };
+  expect(validContribution(view)).toBe(true);
+  expect(validContribution({ ...view, views: 0, seconds: 15 })).toBe(true);
+  for (const extra of [{ ip: "127.0.0.1" }, { visitor: "abc" }, { session: "xyz" }, { title: "private" }]) expect(validContribution({ ...view, ...extra })).toBe(false);
+  for (const seconds of [-5, 1, 35, 4.5]) expect(validContribution({ ...view, views: 0, seconds })).toBe(false);
+  expect(validContribution({ ...view, referrer: "https://private.example" })).toBe(false);
 });
-
-test("reduces external referrers to their origin and drops same-site or unsafe values", () => {
-  expect(
-    sanitizeExternalReferrer(
-      "https://news.example/article?email=reader@example.test#comments",
-      "https://site.example",
-    ),
-  ).toBe("https://news.example");
-  expect(sanitizeExternalReferrer("https://site.example/private?token=x", "https://site.example")).toBeUndefined();
-  expect(sanitizeExternalReferrer("mailto:reader@example.test", "https://site.example")).toBeUndefined();
-  expect(sanitizeExternalReferrer("https://user:password@news.example/", "https://site.example")).toBeUndefined();
-});
-
-test("creates path-only pageviews with generic titles and an allowlisted payload", () => {
-  expect(
-    createPageViewPayload(
-      "/blog/a-public-post/",
-      "synthetic-website",
-      "site.example",
-      "https://site.example",
-      "https://news.example/story?private=x",
-    ),
-  ).toEqual({
-    website: "synthetic-website",
-    hostname: "site.example",
-    url: "/blog/a-public-post",
-    title: "Blog article",
-    referrer: "https://news.example",
-  });
-  expect(createPageViewPayload("/blog/draft/preview", "id", "site.example", "https://site.example")).toBeNull();
-});
-
-test("sends tracking without propagating synchronous or asynchronous failures", async () => {
-  const rejectedTracker = { track: vi.fn().mockRejectedValue(new Error("offline")) };
-  expect(() => sendPageView(rejectedTracker, {
-    website: "synthetic-website",
-    hostname: "site.example",
-    url: "/",
-    title: "Home",
-  })).not.toThrow();
+test("sends without credentials, referrer headers, retries, storage, or beacon", async () => {
+  const fetchMock = vi.fn().mockRejectedValue(new Error("offline"));
+  vi.stubGlobal("fetch", fetchMock);
+  const data = { path: "/", referrer: "direct" as const, views: 1, seconds: 0 };
+  sendContribution(data);
   await Promise.resolve();
-  expect(rejectedTracker.track).toHaveBeenCalledOnce();
-
-  const throwingTracker = { track: vi.fn(() => { throw new Error("blocked"); }) };
-  expect(() => sendPageView(throwingTracker, {
-    website: "synthetic-website",
-    hostname: "site.example",
-    url: "/",
-    title: "Home",
-  })).not.toThrow();
-});
-
-test("does not wait for tracker requests that never settle", () => {
-  const pending = new Promise<void>(() => {});
-  const tracker = {
-    getSession: () => ({ website: "synthetic-website" }),
-    track: vi.fn(() => pending),
-  };
-
-  expect(() => sendPageView(tracker, {
-    website: "synthetic-website",
-    hostname: "site.example",
-    url: "/",
-    title: "Home",
-  })).not.toThrow();
-  expect(() => sendOutboundInterest(tracker, "contact_email")).not.toThrow();
-  expect(tracker.track).toHaveBeenCalledTimes(2);
-});
-
-test.each(["contact_email", "contact_profile", "repository", "demo"] as const)(
-  "sends a minimal outbound-interest payload for category %s",
-  (category) => {
-    const track = vi.fn().mockResolvedValue(undefined);
-    const tracker = { getSession: () => ({ website: "synthetic-website" }), track };
-    window.history.replaceState({}, "", "/projects/public-project?email=private#private-fragment");
-    sendOutboundInterest(tracker, category);
-    expect(track).toHaveBeenCalledOnce();
-    expect(track).toHaveBeenCalledWith({
-      website: "synthetic-website",
-      hostname: window.location.hostname,
-      url: "/projects/public-project",
-      title: "Project",
-      name: "outbound_interest",
-      data: { category },
-    });
-    expect(JSON.stringify(track.mock.calls)).not.toContain("mailto:");
-    expect(JSON.stringify(track.mock.calls)).not.toContain("private");
-    window.history.replaceState({}, "", "/");
-  },
-);
-
-test("outbound tracking failure is fire-and-forget", async () => {
-  const rejectedTracker = {
-    getSession: () => ({ website: "synthetic-website" }),
-    track: vi.fn().mockRejectedValue(new Error("offline")),
-  };
-  expect(() => sendOutboundInterest(rejectedTracker, "contact_email")).not.toThrow();
-  await Promise.resolve();
-  expect(rejectedTracker.track).toHaveBeenCalledWith(expect.objectContaining({
-    name: "outbound_interest",
-    data: { category: "contact_email" },
+  expect(fetchMock).toHaveBeenCalledExactlyOnceWith("/stats/collect", expect.objectContaining({
+    body: JSON.stringify(data), credentials: "omit", referrerPolicy: "no-referrer", keepalive: true,
   }));
-
-  const throwingTracker = {
-    getSession: () => ({ website: "synthetic-website" }),
-    track: vi.fn(() => { throw new Error("blocked"); }),
-  };
-  expect(() => sendOutboundInterest(throwingTracker, "demo")).not.toThrow();
 });
