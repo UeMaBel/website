@@ -1,6 +1,6 @@
 import { ContentSection } from "../../components/content/content-section";
 import { PageHeading } from "../../components/content/page-heading";
-import { ProfileContactLinks } from "../../components/content/profile-contact-links";
+import { ProfileContactDetails } from "../../components/content/profile-contact-details";
 import { getProfile } from "../../lib/api";
 import { Markdown } from "../../components/content/markdown";
 import { publicPageMetadata } from "../../lib/metadata";
@@ -19,8 +19,8 @@ export default async function ContactPage() {
         <PageHeading title="Contact">
           {profile.contact_introduction?.trim() && <Markdown source={profile.contact_introduction} />}
         </PageHeading>
-        <ContentSection id="contact-details" title="Contact details">
-          <ProfileContactLinks email={profile.email} links={profile.links} />
+        <ContentSection id="contact-details" title="Get in touch">
+          <ProfileContactDetails name={profile.display_name} email={profile.email} links={profile.links} />
         </ContentSection>
       </>
     );

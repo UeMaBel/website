@@ -7,7 +7,7 @@ export function PointField() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const hero = canvas?.closest<HTMLElement>(".hero");
+    const hero = canvas?.parentElement;
     const context = canvas?.getContext("2d");
     if (!canvas || !hero || !context) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -98,11 +98,9 @@ export function PointField() {
       height = hero.clientHeight;
       const slot = canvas.parentElement;
       if (!slot) return;
-      const heroBounds = hero.getBoundingClientRect();
-      const slotBounds = slot.getBoundingClientRect();
-      centerX = slotBounds.left - heroBounds.left + slotBounds.width / 2;
-      centerY = slotBounds.top - heroBounds.top + slotBounds.height / 2;
-      radius = Math.min(slotBounds.width * 0.4, slotBounds.height * 0.55);
+      centerX = width / 2;
+      centerY = height / 2;
+      radius = Math.min(width * 0.4, height * 0.55);
       const scale = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = width * scale;
       canvas.height = height * scale;

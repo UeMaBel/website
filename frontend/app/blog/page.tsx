@@ -98,9 +98,11 @@ export default async function BlogPage({
             <ol className="blog-post-list" aria-label="Published posts">
               {posts.results.map((post) => (
                 <li className="blog-post" key={post.slug}>
+                  <p className="eyebrow blog-post-kicker">Field notes / {post.tags[0]?.name || "Engineering"}</p>
                   <h2>
                     <Link href={`/blog/${encodeURIComponent(post.slug)}`}>
                       {post.title}
+                      <span className="blog-post-arrow" aria-hidden="true">↗</span>
                     </Link>
                   </h2>
                   <p className="blog-post-meta">
@@ -109,6 +111,7 @@ export default async function BlogPage({
                       {formatPublishedDate(post.published_at)}
                     </time>
                   </p>
+                  {post.tags.length > 0 && <BlogTagLinks tags={post.tags} label="Topics" />}
                 </li>
               ))}
             </ol>

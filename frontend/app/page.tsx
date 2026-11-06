@@ -1,8 +1,9 @@
 import { PointField } from "../components/layout/point-field";
+import { BrandIcon } from "../components/layout/brand-icon";
 import Link from "next/link";
 import Image from "next/image";
 import { Markdown } from "../components/content/markdown";
-import { ProfileContactLinks } from "../components/content/profile-contact-links";
+import { ProfileContactDetails } from "../components/content/profile-contact-details";
 import { getBlogPosts, getProfile, getProjects } from "../lib/api";
 import { publicPageMetadata } from "../lib/metadata";
 
@@ -55,7 +56,17 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-        <PointField />
+        <div className="hero-portrait">
+          <Image
+            className="portrait portrait-round"
+            src="/images/portrait.jpg"
+            alt="Portrait of Matthias Uebelacker"
+            width={576}
+            height={576}
+            sizes="(min-width: 1024px) 352px, (min-width: 360px) 288px, 80vw"
+            preload
+          />
+        </div>
       </section>
       <div className="discipline-strip flex flex-wrap justify-between gap-4">
         <span><span className="chrome-bracket" aria-hidden="true">[</span> Software development <span className="chrome-bracket" aria-hidden="true">]</span></span>
@@ -69,16 +80,7 @@ export default async function HomePage() {
         aria-labelledby="intro-title"
       >
         <p className="eyebrow introduction-label">01 / Introduction</p>
-        <div className="introduction-portrait">
-            <Image
-              className="portrait portrait-round"
-              src="/images/portrait.jpg"
-              alt="Portrait of Matthias Uebelacker"
-              width={576}
-              height={576}
-              sizes="(min-width: 768px) 288px, (min-width: 360px) 256px, 80vw"
-            />
-        </div>
+        <PointField />
         <div>
           <h2 id="intro-title">From the first conversation to production</h2>
           <p className="intro-copy">
@@ -88,11 +90,6 @@ export default async function HomePage() {
             solid architecture are key for me, from the first conversation
             through development and into daily use.
           </p>
-          {profile?.biography.trim() && (
-            <div className="intro-biography">
-              <Markdown source={profile.biography} />
-            </div>
-          )}
           <Link className="text-link" href="/about">
             About / CV <span aria-hidden="true">↗</span>
           </Link>
@@ -190,19 +187,19 @@ export default async function HomePage() {
         aria-labelledby="contact-title"
       >
         <div>
-          <p className="eyebrow">04 / Contact</p>
+          <p className="eyebrow contact-brand"><BrandIcon size={28} /> 04 / Contact</p>
           <h2 id="contact-title">What are you working on?</h2>
           <p>
             Have a project in mind or an existing application that needs work?
             Tell me what you're building and where you could use a hand.
           </p>
           <Link className="button-primary" href="/contact">
-            Contact <span aria-hidden="true">↗</span>
+            Get in touch <span aria-hidden="true">↗</span>
           </Link>
         </div>
         <div className="contact-details">
           {profile ? (
-            <ProfileContactLinks email={profile.email} links={profile.links} />
+            <ProfileContactDetails name={profile.display_name} email={profile.email} links={profile.links} />
           ) : (
             <p className="profile-error" role="alert">
               Contact details are temporarily unavailable. Please try again

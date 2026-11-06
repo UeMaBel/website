@@ -85,6 +85,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <article className="blog-article">
+      <Link className="text-link blog-breadcrumb" href="/blog">← All writing</Link>
+      <p className="eyebrow">Field notes / Blog</p>
       <PageHeading title={post.title}>
         <p className="blog-detail-meta">
           <span>By {post.author.name}</span>

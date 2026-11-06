@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import localFont from "next/font/local";
 import { PageContainer } from "../components/layout/page-container";
 import { SiteHeader } from "../components/layout/site-header";
 import { SiteFooter } from "../components/layout/site-footer";
@@ -7,6 +8,10 @@ import { headers } from "next/headers";
 import { getPublicSiteOrigin } from "../lib/public-origin";
 import { PageViewTracker } from "../components/analytics/page-view-tracker";
 import "./globals.css";
+
+const headlineFont = localFont({ src: "./fonts/headline.ttf", variable: "--font-headline", display: "swap", weight: "100 900" });
+const readingFont = localFont({ src: "./fonts/reading.ttf", variable: "--font-reading", display: "swap", weight: "200 900" });
+const monoFont = localFont({ src: "./fonts/mono.ttf", variable: "--font-mono", display: "swap", weight: "400" });
 
 export async function generateMetadata(): Promise<Metadata> {
   // Dynamic metadata ensures runtime container configuration is used after image build.
@@ -37,7 +42,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const publicSiteOrigin = getPublicSiteOrigin().origin;
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${headlineFont.variable} ${readingFont.variable} ${monoFont.variable}`}>
       <body>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <SiteHeader />
