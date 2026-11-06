@@ -1,5 +1,6 @@
 import { PointField } from "../components/layout/point-field";
 import Link from "next/link";
+import Image from "next/image";
 import { Markdown } from "../components/content/markdown";
 import { ProfileContactLinks } from "../components/content/profile-contact-links";
 import { getBlogPosts, getProfile, getProjects } from "../lib/api";
@@ -64,18 +65,19 @@ export default async function HomePage() {
         <span><span className="chrome-bracket" aria-hidden="true">[</span> AI experiments <span className="chrome-bracket" aria-hidden="true">]</span></span>
       </div>
       <section
-        className="landing-section section-divider grid gap-8 md:grid-cols-[1fr_2fr]"
+        className="landing-section section-divider introduction grid items-center gap-8 md:grid-cols-[1fr_2fr]"
         aria-labelledby="intro-title"
       >
-        <div>
-          <p className="eyebrow">01 / Introduction</p>
-          <div className="portrait-placeholder" role="img" aria-label="Placeholder for a portrait of Matthias">
-            <svg viewBox="0 0 160 200" fill="none" aria-hidden="true">
-              <circle cx="80" cy="69" r="29" />
-              <path d="M25 175v-12a55 55 0 0 1 110 0v12" />
-            </svg>
-            <span><span className="chrome-bracket">[</span> Your portrait <span className="chrome-bracket">]</span></span>
-          </div>
+        <p className="eyebrow introduction-label">01 / Introduction</p>
+        <div className="introduction-portrait">
+            <Image
+              className="portrait portrait-round"
+              src="/images/portrait.jpg"
+              alt="Portrait of Matthias Uebelacker"
+              width={576}
+              height={576}
+              sizes="(min-width: 768px) 288px, (min-width: 360px) 256px, 80vw"
+            />
         </div>
         <div>
           <h2 id="intro-title">From the first conversation to production</h2>
