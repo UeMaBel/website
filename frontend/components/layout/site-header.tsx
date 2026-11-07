@@ -37,14 +37,6 @@ export function SiteHeader() {
               ))}
             </ul>
           </nav>
-          <button
-            className="language-switch"
-            type="button"
-            disabled
-            title="Language switching is not available yet"
-          >
-            DE / EN
-          </button>
         </div>
       </PageContainer>
     </header>

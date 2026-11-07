@@ -57,3 +57,28 @@ class ThumbnailTests(TestCase):
         for obj in (self.project, self.post):
             obj.refresh_from_db()
             self.assertIsNone(obj.thumbnail_id)
+
+    def test_hide_detail_thumbnail_retains_listing_image_and_exposes_preference(self):
+        for obj, endpoint in [(self.project, 'projects'), (self.post, 'blog/posts')]:
+            with self.subTest(endpoint=endpoint):
+                self.assertFalse(obj.hide_thumbnail_on_detail)
+                obj.thumbnail = self.image
+                obj.hide_thumbnail_on_detail = True
+                obj.save()
+                path = f'/api/v1/{endpoint}/'
+                listing = self.client.get(path, HTTP_HOST='localhost').json()['results'][0]
+                detail = self.client.get(path + 'example/', HTTP_HOST='localhost').json()
+                self.assertEqual(listing['thumbnail']['url'], self.image.file.url)
+                self.assertEqual(detail['thumbnail'], listing['thumbnail'])
+                self.assertTrue(detail['hide_thumbnail_on_detail'])
+
+    def test_draft_preview_includes_thumbnail_visibility_preference(self):
+        self.post.status = 'draft'
+        self.post.thumbnail = self.image
+        self.post.hide_thumbnail_on_detail = True
+        self.post.save()
+        staff = get_user_model().objects.create_superuser(username='editor', password='test')
+        self.client.force_login(staff)
+        response = self.client.get('/api/v1/blog/posts/example/preview/', HTTP_HOST='localhost')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['hide_thumbnail_on_detail'])

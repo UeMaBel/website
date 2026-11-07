@@ -13,6 +13,7 @@ def _project_data(project):
     return {
         'slug': project.slug,
         'title': project.title,
+        'hide_thumbnail_on_detail': project.hide_thumbnail_on_detail,
         'thumbnail': {
             'url': project.thumbnail.file.url,
             'alt_text': project.thumbnail.alt_text,

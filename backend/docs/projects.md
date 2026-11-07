@@ -45,3 +45,10 @@ unavailable demo does not affect the project page. Add or reorder images with
 the inline position field, selecting uploaded images from the media library.
 PDF uploads are excluded. Removing a project or image link does not delete the
 uploaded file.
+
+
+Blog posts and projects have a `hide_thumbnail_on_detail` boolean, defaulting to false.
+Enable **Hide thumbnail on detail page** in admin to suppress the image on its own
+page (including draft previews), while keeping listing thumbnails. The API includes
+the boolean alongside the unchanged thumbnail. Apply the new blog and project
+migrations before deploying the frontend.

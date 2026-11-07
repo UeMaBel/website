@@ -107,7 +107,7 @@ export default async function BlogPage({
                       <span className="blog-post-arrow" aria-hidden="true">↗</span>
                     </Link>
                   </h2>
-                  <ContentThumbnail image={post.thumbnail} className="blog-overview-thumbnail" />
+                  <ContentThumbnail image={post.thumbnail} frameClassName="blog-overview-thumbnail" />
                   </div>
                   <p className="blog-post-meta">
                     <span>By {post.author.name}</span>

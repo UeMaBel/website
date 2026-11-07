@@ -1,5 +1,5 @@
 import profile from "../../page-content/profile.json";
-import { ContentThumbnail } from "../../components/content/content-thumbnail";
+import { ProjectThumbnail } from "../../components/content/project-thumbnail";
 import Link from "next/link";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
@@ -26,10 +26,11 @@ export default async function ProjectsPage() {
           <p className="project-notice" role="status">No projects are available yet.</p>
         ) : (
           <ol className="project-list" aria-label="Projects">
-            {projects.results.map((project) => (
+            {projects.results.map((project, index) => (
               <li className="project-entry" key={project.slug}>
                 <article>
-                  <ContentThumbnail image={project.thumbnail} />
+                  <ProjectThumbnail image={project.thumbnail} index={index} />
+                  <div className="project-entry-copy">
                   <h2>
                     <Link href={`/projects/${encodeURIComponent(project.slug)}`}>
                       {project.title}
@@ -57,6 +58,7 @@ export default async function ProjectsPage() {
                       ))}
                     </ul>
                   )}
+                  </div>
                 </article>
               </li>
             ))}

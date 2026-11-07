@@ -41,6 +41,7 @@ export interface BlogTagWithCount extends BlogTag {
 }
 
 export interface BlogPostSummary {
+  hide_thumbnail_on_detail?: boolean;
   thumbnail?: ContentThumbnail | null;
   slug: string;
   title: string;
@@ -120,6 +121,7 @@ export interface ProjectImage {
 }
 
 export interface Project {
+  hide_thumbnail_on_detail?: boolean;
   thumbnail?: ContentThumbnail | null;
   slug: string;
   title: string;

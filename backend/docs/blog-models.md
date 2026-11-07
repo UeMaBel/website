@@ -110,3 +110,10 @@ login; repeat with staff lacking permissions to confirm access is denied.
 The HTTP smoke drill for ticket 07 used a real non-superuser staff account,
 admin POSTs for each operation, and refreshed persisted objects after saves;
 all temporary content was rolled back.
+
+
+Blog posts and projects have a `hide_thumbnail_on_detail` boolean, defaulting to false.
+Enable **Hide thumbnail on detail page** in admin to suppress the image on its own
+page (including draft previews), while keeping listing thumbnails. The API includes
+the boolean alongside the unchanged thumbnail. Apply the new blog and project
+migrations before deploying the frontend.

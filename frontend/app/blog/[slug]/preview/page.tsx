@@ -41,7 +41,7 @@ export default async function BlogPreviewPage({ params }: BlogPreviewPageProps) 
           <p className="blog-detail-meta">By {post.author.name}</p>
         </PageHeading>
 
-        <ContentThumbnail image={post.thumbnail} className="detail-thumbnail" />
+        {!post.hide_thumbnail_on_detail && <ContentThumbnail image={post.thumbnail} className="blog-detail-thumbnail" />}
 
         {post.tags.length > 0 && <BlogTagLinks tags={post.tags} label="Post tags" />}
 

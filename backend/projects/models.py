@@ -11,6 +11,10 @@ class Project(models.Model):
         related_name='%(app_label)s_thumbnails', limit_choices_to={'kind': 'image'},
         help_text='Optional image used in cards and at the top of the detail page.',
     )
+    hide_thumbnail_on_detail = models.BooleanField(
+        'Hide thumbnail on detail page', default=False,
+        help_text='Keep the thumbnail in listings, but hide it on its own page and draft preview.',
+    )
     title = models.CharField(max_length=250)
     slug = models.SlugField(max_length=250, unique=True)
     problem = models.TextField(help_text='Markdown source')

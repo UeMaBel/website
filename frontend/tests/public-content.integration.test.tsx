@@ -85,6 +85,38 @@ afterEach(() => {
 });
 
 describe("public content journeys", () => {
+
+  it.each([false, true])("honors detail thumbnail hiding (%s) while retaining project listing images", async (hidden) => {
+    const item = project({
+      thumbnail: { url: "/media/uploads/cover.png", alt_text: "Project cover" },
+      hide_thumbnail_on_detail: hidden,
+    });
+    fetchMock.mockResolvedValue(jsonResponse(item));
+    const detail = render(await ProjectDetailPage({ params: Promise.resolve({ slug: "sample-project" }) }));
+    expect(Boolean(screen.queryByRole("img", { name: "Project cover" }))).toBe(!hidden);
+    detail.unmount();
+    fetchMock.mockResolvedValue(jsonResponse({ count: 1, results: [item] }));
+    render(await ProjectsPage());
+    expect(screen.getByRole("img", { name: "Project cover" })).toBeTruthy();
+  });
+
+  it.each([false, true])("honors detail thumbnail hiding (%s) while retaining blog listing images", async (hidden) => {
+    const item = post({
+      thumbnail: { url: "/media/uploads/cover.png", alt_text: "Article cover" },
+      hide_thumbnail_on_detail: hidden,
+    });
+    fetchMock.mockResolvedValue(jsonResponse(item));
+    const detail = render(await BlogPostPage({ params: Promise.resolve({ slug: "published-article" }) }));
+    expect(Boolean(screen.queryByRole("img", { name: "Article cover" }))).toBe(!hidden);
+    detail.unmount();
+    fetchMock.mockImplementation((url: URL) => Promise.resolve(jsonResponse(
+      url.pathname === "/api/v1/blog/tags/" ? { count: 0, results: [] }
+        : { count: 1, results: [item], next: null, previous: null },
+    )));
+    render(await BlogPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByRole("img", { name: "Article cover" })).toBeTruthy();
+  });
+
   it("keeps privacy, profile and contact content available without the backend", async () => {
     fetchMock.mockRejectedValue(new Error("offline"));
     const privacy = render(DatenschutzPage());

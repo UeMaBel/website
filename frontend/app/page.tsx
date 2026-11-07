@@ -1,5 +1,5 @@
 import profile from "../page-content/profile.json";
-import { ContentThumbnail } from "../components/content/content-thumbnail";
+import { ProjectThumbnail } from "../components/content/project-thumbnail";
 import { PointField } from "../components/layout/point-field";
 import { BrandIcon } from "../components/layout/brand-icon";
 import Link from "next/link";
@@ -46,6 +46,10 @@ export default async function HomePage() {
             in their daily work. From the first idea to keeping things running.
             I also spend a lot of time exploring AI and coding agents, often
             following a rabbit hole further than I planned.
+          </p>
+          <p className="hero-description">
+            I help companies connect industrial systems, build data platforms,
+            and improve the applications their teams rely on.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link className="button-primary" href="/projects">
@@ -113,15 +117,7 @@ export default async function HomePage() {
                 href={`/projects/${encodeURIComponent(project.slug)}`}
                 key={project.slug}
               >
-                {project.thumbnail ? <ContentThumbnail image={project.thumbnail} className="work-thumbnail" /> : <div
-                  className={`project-art project-art-${i}`}
-                  aria-hidden="true"
-                >
-                  <span>{i === 0 ? "{ · }" : "↗"}</span>
-                  <span className="art-caption">
-                    ENGINEERING / {String(i + 1).padStart(2, "0")}
-                  </span>
-                </div>}
+                <ProjectThumbnail image={project.thumbnail} index={i} />
                 <div className="card-copy">
                   <p className="eyebrow">
                     {project.technologies.slice(0, 3).join(" / ") ||

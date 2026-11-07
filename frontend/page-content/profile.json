@@ -4,7 +4,7 @@
   "contact_introduction": "## Matthias Uebelacker\r\nMühlenstr. 1\r\n85664 Hohenlinden\r\n\r\n![Email](/icons/email.svg) [Email](mailto:matthias@uebel.dev)\r\n![GitHub](/icons/github.svg) [GitHub](https://github.com/uemabel)",
   "impressum": "## Impressum\r\n\r\n### Angaben gemäß § 5 DDG\r\nMatthias Uebelacker\r\nMühlenstr. 1\r\n85664 Hohenlinden\r\n\r\n### Kontakt\r\nTelefonnummer: +49 163 3787 356\r\nE-Mail: matthias@uebel.dev  \r\n\r\n### Umsatzsteuer-ID\r\nUmsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:  \r\nDE323992916\r\n\r\n### Redaktionell verantwortlich\r\nMatthias Uebelacker\r\nMühlenstr. 1\r\n85664 Hohenlinden",
   "projects_introduction": "My last big project was a platform for collecting, processing and presenting operational data. Around 100 people use it daily across more than 10 sites in four countries. I used Django and Celery for the backend and React for the frontend. As lead developer, I handled the architecture, development, stakeholder communication and everything else that comes with building and shipping software in a non-tech company.",
-  "email": "matthias.uebelacker@gmail.com",
+  "email": "matthias@uebel.dev",
   "cv_url": null,
   "experience": [
     {

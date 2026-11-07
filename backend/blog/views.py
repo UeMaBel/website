@@ -36,6 +36,7 @@ def _post_data(post, include_body=False):
     data = {
         'slug': post.slug,
         'title': post.title,
+        'hide_thumbnail_on_detail': post.hide_thumbnail_on_detail,
         'thumbnail': {
             'url': post.thumbnail.file.url,
             'alt_text': post.thumbnail.alt_text,

@@ -64,6 +64,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
     return (
       <article className="project-detail">
+        <div className="project-detail-header">
         <PageHeading title={project.title}>
           {project.technologies.length > 0 && (
             <ul className="project-detail-technologies" aria-label="Technologies">
@@ -72,7 +73,8 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           )}
         </PageHeading>
 
-        <ContentThumbnail image={project.thumbnail} className="detail-thumbnail" />
+        {!project.hide_thumbnail_on_detail && <ContentThumbnail image={project.thumbnail} className="project-detail-thumbnail" />}
+        </div>
 
         {project.problem.trim() && (
           <section aria-labelledby="project-problem-heading">
