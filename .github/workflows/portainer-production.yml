@@ -1,0 +1,127 @@
+name: Deliver to Portainer
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize the entire pipeline so an older build cannot deploy after a newer one.
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deployment-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify deployment controller without credentials
+        run: python3 .github/scripts/test_deploy_portainer.py
+  backend:
+    uses: ./.github/workflows/backend.yml
+  frontend:
+    uses: ./.github/workflows/frontend.yml
+  containers:
+    uses: ./.github/workflows/container-integration.yml
+
+  publish:
+    if: github.ref == 'refs/heads/main'
+    needs: [backend, frontend, containers, deployment-contract]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      backend: ${{ steps.images.outputs.backend }}
+      frontend: ${{ steps.images.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Select image names
+        id: names
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: echo "prefix=ghcr.io/${OWNER,,}/personal-website" >> "$GITHUB_OUTPUT"
+      - name: Publish Django image
+        id: backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          target: production
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.names.outputs.prefix }}-backend:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+      - name: Publish React image
+        id: frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          target: production
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.names.outputs.prefix }}-frontend:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+      - name: Export immutable image references
+        id: images
+        env:
+          PREFIX: ${{ steps.names.outputs.prefix }}
+          BACKEND_DIGEST: ${{ steps.backend.outputs.digest }}
+          FRONTEND_DIGEST: ${{ steps.frontend.outputs.digest }}
+        run: |
+          echo "backend=$PREFIX-backend@$BACKEND_DIGEST" >> "$GITHUB_OUTPUT"
+          echo "frontend=$PREFIX-frontend@$FRONTEND_DIGEST" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: publish
+    runs-on: ubuntu-24.04
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Skip a superseded commit
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [[ "$head_sha" == "$GITHUB_SHA" ]]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'A newer commit is on main; skipping this deployment.'
+          fi
+      - name: Render standalone Portainer stack
+        if: steps.current.outputs.deploy == 'true'
+        run: >-
+          docker compose -f compose.production.yaml -f compose.portainer.yaml
+          config --no-interpolate > "$RUNNER_TEMP/portainer-compose.yaml"
+      - name: Pull and redeploy through Portainer, then verify readiness
+        if: steps.current.outputs.deploy == 'true'
+        env:
+          PORTAINER_URL: ${{ vars.PORTAINER_URL }}
+          PORTAINER_STACK_ID: ${{ vars.PORTAINER_STACK_ID }}
+          PORTAINER_ENDPOINT_ID: ${{ vars.PORTAINER_ENDPOINT_ID }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          BACKEND_IMAGE: ${{ needs.publish.outputs.backend }}
+          FRONTEND_IMAGE: ${{ needs.publish.outputs.frontend }}
+          STACK_FILE: ${{ runner.temp }}/portainer-compose.yaml
+        run: python3 .github/scripts/deploy-portainer.py

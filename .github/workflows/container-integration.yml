@@ -1,6 +1,7 @@
 name: Container integration
 
 on:
+  workflow_call:
   push:
   pull_request:
 
@@ -23,6 +24,9 @@ jobs:
         run: bash .github/scripts/compose-smoke.sh
         env:
           CI_COMPOSE_LOG: ${{ runner.temp }}/website-compose-ci.log
+
+      - name: Validate image-only Portainer configuration
+        run: docker compose -f compose.production.yaml -f compose.portainer.yaml config --no-interpolate --quiet
 
       - name: Retain Compose logs on failure
         if: failure()
