@@ -117,16 +117,22 @@ describe("public content journeys", () => {
     expect(screen.getByRole("img", { name: "Article cover" })).toBeTruthy();
   });
 
-  it("keeps privacy, profile and contact content available without the backend", async () => {
+  it("uses the bundled profile snapshot when the profile API is unavailable", async () => {
     fetchMock.mockRejectedValue(new Error("offline"));
     const privacy = render(DatenschutzPage());
     expect(screen.getByRole("heading", { name: "Datenschutz", level: 1 })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Datenschutzhinweise von Hetzner" })).toBeTruthy();
     expect(screen.queryByText(/Arbeitsfassung/)).toBeNull();
     privacy.unmount();
-    const about = render(AboutPage());
+    const about = render(await AboutPage());
     expect(screen.getByText("Hi, I'm Matthias.")).toBeTruthy();
+    expect(screen.getByText("BDE Datahub")).toBeTruthy();
     about.unmount();
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL("https://content.example.test/api/v1/profile/"),
+      expect.objectContaining({ cache: "no-store" }),
+    );
+    fetchMock.mockClear();
     render(ContactPage());
     expect(screen.getByRole("link", { name: "Email" }).getAttribute("href")).toBe("mailto:matthias@uebel.dev");
     expect(screen.getByRole("region", { name: "Impressum" })).toBeTruthy();
@@ -210,7 +216,7 @@ describe("public content journeys", () => {
   });
 
   it("shows an accessible unavailable state when no CV is configured", async () => {
-    fetchMock.mockResolvedValue(jsonResponse(profile(null)));
+    fetchMock.mockResolvedValue(jsonResponse({ ...profile(null), contact_introduction: "", impressum: "", projects_introduction: "" }));
 
     render(await AboutPage());
 

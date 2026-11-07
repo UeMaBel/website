@@ -207,9 +207,9 @@ account; repository configuration does not submit the sitemap automatically.
 
 ## Static owner content
 
-About/CV, contact details, Impressum and page introductions now use the bundled
-`page-content/profile.json` snapshot. Existing database profile fields are retained
-but do not control these pages. Privacy text is bundled from the existing policy
+About/CV reads the profile API and uses the bundled `page-content/profile.json`
+snapshot if the database request fails. Contact details, Impressum and page
+introductions use the bundled snapshot. Privacy text is bundled from the existing policy
 in `docs/datenschutzerklaerung-vorlage.md`; the database `dsgvo` field is removed by
 backend migration `0006_remove_profile_dsgvo`. Rebuild the frontend after editing
 static content. See `page-content/README.md`.

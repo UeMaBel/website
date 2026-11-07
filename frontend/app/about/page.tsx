@@ -2,6 +2,8 @@ import profile from "../../page-content/profile.json";
 import { ContentSection } from "../../components/content/content-section";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
+import { getProfile } from "../../lib/api";
+import type { PublicProfile } from "../../lib/api";
 import { publicPageMetadata } from "../../lib/metadata";
 
 export const metadata = publicPageMetadata(
@@ -41,22 +43,26 @@ function DateRange({ start, end }: { start: string | null; end: string | null })
   );
 }
 
-export default function AboutPage() {
-  const experience = sortByPosition(profile.experience);
-  const education = sortByPosition(profile.education);
-  const skills = sortByPosition(profile.skills);
+export default async function AboutPage() {
+  const profileResult = await Promise.allSettled([getProfile()]);
+  const currentProfile: PublicProfile = profileResult[0].status === "fulfilled"
+    ? profileResult[0].value
+    : profile;
+  const experience = sortByPosition(currentProfile.experience);
+  const education = sortByPosition(currentProfile.education);
+  const skills = sortByPosition(currentProfile.skills);
 
   return (
     <>
       <PageHeading title="About / CV">
-        {profile.display_name.trim() && (
-          <p className="profile-display-name">{profile.display_name}</p>
+        {currentProfile.display_name.trim() && (
+          <p className="profile-display-name">{currentProfile.display_name}</p>
         )}
       </PageHeading>
 
       <ContentSection id="biography" title="Biography">
-        {profile.biography.trim() ? (
-          <Markdown source={profile.biography} />
+        {currentProfile.biography.trim() ? (
+          <Markdown source={currentProfile.biography} />
         ) : (
           <p className="profile-empty" role="status">Biography coming soon.</p>
         )}
@@ -118,9 +124,9 @@ export default function AboutPage() {
       </ContentSection>
 
       <ContentSection id="curriculum-vitae" title="Curriculum vitae">
-        {profile.cv_url ? (
+        {currentProfile.cv_url ? (
           <p>
-            <a href={profile.cv_url} download>
+            <a href={currentProfile.cv_url} download>
               Download CV (PDF)
             </a>
           </p>

@@ -1,9 +1,9 @@
 # Static page content
 
-`profile.json` contains the current public profile snapshot: biography, career,
-education, skills, contact card, Impressum and project introduction. Pages import
-it directly; editing the database no longer changes this content. The existing
-profile fields and records remain in the database for now.
+`profile.json` contains the public profile fallback: biography, career, education,
+skills and a CV URL. The About/CV page reads the latest profile from the backend
+API and uses this snapshot if the request fails. The homepage and other pages
+continue to use snapshot fields for their bundled content.
 
 `datenschutz.ts` contains the privacy Markdown from
 `docs/datenschutzerklaerung-vorlage.md` at the repository root, excluding its opening
