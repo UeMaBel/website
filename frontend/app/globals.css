@@ -749,7 +749,7 @@ main:has(.landing) { padding-top: 0; }
 .site-footer p { display: block; }
 .chrome-bracket { color: #527d2b; font-weight: 700; }
 /* The favicon and word form one continuous [U]ebel mark. */
-.site-mark { display: inline-flex; align-items: center; gap: .65rem; color: var(--color-ink); text-decoration: none; font-family: var(--font-headline), sans-serif; }
+.site-mark { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .65rem; color: var(--color-ink); text-decoration: none; font-family: var(--font-headline), sans-serif; }
 .site-mark-symbol { display: inline-flex; align-items: center; gap: .2rem; }
 .site-mark-icon { display: block; width: 2.35rem; height: 2.35rem; flex-shrink: 0; }
 .site-mark-word { display: grid; place-items: center; height: 2.35rem; padding-inline: .3rem; border: 2px solid var(--color-ink); font-size: 1.85rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; text-transform: none; }

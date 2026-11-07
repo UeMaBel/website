@@ -8,12 +8,15 @@ import { Markdown } from "../components/content/markdown";
 import { ProfileContactDetails } from "../components/content/profile-contact-details";
 import { getBlogPosts, getProjects } from "../lib/api";
 import { publicPageMetadata } from "../lib/metadata";
+import type { Metadata } from "next";
 
-export const metadata = publicPageMetadata(
-  "ebel Software, data and AI",
-  "Freelance software development, data platforms and AI experiments. Projects and writing by Matthias Uebelacker.",
-  "/",
-);
+export function generateMetadata(): Metadata {
+  return publicPageMetadata(
+    "uebel | Home - Matthias Uebelacker",
+    "Freelance software development, data platforms and AI experiments. Projects and writing by Matthias Uebelacker.",
+    "/",
+  );
+}
 
 export default async function HomePage() {
   const [projectsResult, postsResult] = await Promise.allSettled([

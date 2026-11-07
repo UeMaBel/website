@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const publicOrigin = getPublicSiteOrigin();
   return {
     metadataBase: publicOrigin,
-    title: { default: "uebel | Matthias Uebelacker — Software & Data Engineering", template: "uebel | %s — Matthias Uebelacker" },
+    title: { default: "uebel | Software, data and AI - Matthias Uebelacker", template: "uebel | %s - Matthias Uebelacker" },
     description: "Independent software engineering and AI expertise, technical writing, and projects.",
     openGraph: {
       type: "website",
