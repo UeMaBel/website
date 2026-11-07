@@ -1,9 +1,7 @@
 # Container integration checks
 
-The workflow is also reusable by [automatic Portainer delivery](portainer-deployment.md).
-It validates the merged image-only Portainer Compose configuration in addition
-to the local stack smoke checks below. The deployment controller's offline
-contract checks run in that delivery pipeline before image publication.
+The workflow is also reused by the [production image build](portainer-deployment.md),
+which publishes images only after all checks pass.
 
 `.github/workflows/container-integration.yml` validates both Compose files,
 builds the backend and frontend production images, starts the disposable local

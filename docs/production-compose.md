@@ -1,8 +1,7 @@
 # Production Compose configuration
 
-For CI publishing and automatic Portainer updates, follow
-[Portainer deployment](portainer-deployment.md). The commands below describe
-direct Compose management; let Portainer own its stack once configured.
+For CI publishing and manual Portainer updates, follow
+[Portainer deployment](portainer-deployment.md).
 
 `compose.production.yaml` describes the single host production stack. It does
 not provision a server, DNS, firewall, backups, or credentials. Set those up
