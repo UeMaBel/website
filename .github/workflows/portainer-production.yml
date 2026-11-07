@@ -16,7 +16,7 @@ jobs:
 
   publish:
     if: github.ref == 'refs/heads/main'
-    needs: [backend, frontend, containers, deployment-contract]
+    needs: [backend, frontend, containers]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -47,7 +47,9 @@ jobs:
           target: production
           platforms: linux/amd64
           push: true
-          tags: ${{ steps.names.outputs.prefix }}-backend:sha-${{ github.sha }}
+          tags: |
+            ${{ steps.names.outputs.prefix }}-backend:prod
+            ${{ steps.names.outputs.prefix }}-backend:sha-${{ github.sha }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -61,7 +63,9 @@ jobs:
           target: production
           platforms: linux/amd64
           push: true
-          tags: ${{ steps.names.outputs.prefix }}-frontend:sha-${{ github.sha }}
+          tags: |
+            ${{ steps.names.outputs.prefix }}-frontend:prod
+            ${{ steps.names.outputs.prefix }}-frontend:sha-${{ github.sha }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -77,4 +81,3 @@ jobs:
           echo "backend=$PREFIX-backend@$BACKEND_DIGEST" >> "$GITHUB_OUTPUT"
           echo "frontend=$PREFIX-frontend@$FRONTEND_DIGEST" >> "$GITHUB_OUTPUT"
 
-    needs: [backend, frontend, containers]
