@@ -189,6 +189,22 @@ Version sources: [Node.js release support](https://nodejs.org/en/about/previous-
 Next.js 16.4.3 includes the fixes described in the
 [October security update](https://nextjs.org/blog/nextjs-security-update-october-14-2026).
 
+## Search launch checks
+
+The production environment template uses `SITE_DOMAIN=uebel.dev`, which sets
+`PUBLIC_SITE_ORIGIN=https://uebel.dev` for canonical URLs, robots.txt and the
+sitemap. Update an existing protected production environment file to match.
+Point both `uebel.dev` and `www.uebel.dev` DNS records at the production server.
+The production proxy redirects HTTP to HTTPS and redirects `www` to the apex
+domain, preserving paths and query strings.
+
+After deployment, verify `https://uebel.dev/robots.txt` and
+`https://uebel.dev/sitemap.xml`. In Google Search Console, add or select the
+`uebel.dev` domain property and complete its DNS TXT ownership verification.
+Submit `https://uebel.dev/sitemap.xml` in Sitemaps, then use URL Inspection for
+the homepage and a published article. These steps require the owner's Google
+account; repository configuration does not submit the sitemap automatically.
+
 ## Static owner content
 
 About/CV, contact details, Impressum and page introductions now use the bundled

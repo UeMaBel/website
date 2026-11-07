@@ -37,7 +37,7 @@ export function publicPageMetadata(
       title,
       description,
       url: path,
-      siteName: "Software, Data, AI, Writing",
+      siteName: "uebel",
     },
     twitter: { card: "summary", title, description },
   };

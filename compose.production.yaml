@@ -145,6 +145,10 @@ services:
 configs:
   caddyfile:
     content: |
+      http://www.${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}, https://www.${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file} {
+        redir https://${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file}{uri} 308
+      }
+
       ${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file} {
         encode zstd gzip
         @django path /api/* /admin /admin/* /static/* /media/*

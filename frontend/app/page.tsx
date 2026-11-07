@@ -10,15 +10,16 @@ import { getBlogPosts, getProjects } from "../lib/api";
 import { publicPageMetadata } from "../lib/metadata";
 
 export const metadata = publicPageMetadata(
-  "Software, data and AI",
+  "ebel Software, data and AI",
   "Freelance software development, data platforms and AI experiments. Projects and writing by Matthias Uebelacker.",
   "/",
 );
 
 export default async function HomePage() {
-  const [projectsResult, postsResult] = await Promise.allSettled(
-    [getProjects(), getBlogPosts({ pageSize: 3 })],
-  );
+  const [projectsResult, postsResult] = await Promise.allSettled([
+    getProjects(),
+    getBlogPosts({ pageSize: 3 }),
+  ]);
   const projects =
     projectsResult.status === "fulfilled"
       ? projectsResult.value.results.slice(0, 2)
@@ -37,19 +38,17 @@ export default async function HomePage() {
             {profile?.display_name.trim() ||
               "Freelance software developer and data engineer"}
           </p>
-          <h1 id="hero-title">  
+          <h1 id="hero-title">
             Grounded in fundamentals, <span>accelerated by AI.</span>
           </h1>
           <p className="hero-description">
-            I build data platforms and applications that connect industrial
-            systems and turn production data into something people can use
-            in their daily work. From the first idea to keeping things running.
-            I also spend a lot of time exploring AI and coding agents, often
-            following a rabbit hole further than I planned.
-          </p>
-          <p className="hero-description">
             I help companies connect industrial systems, build data platforms,
             and improve the applications their teams rely on.
+          </p>
+          <p className="hero-description">
+            From the first idea to keeping things running. I also spend a lot of
+            time exploring AI and coding agents, often following a rabbit hole
+            further than I planned.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link className="button-primary" href="/projects">
@@ -73,11 +72,35 @@ export default async function HomePage() {
         </div>
       </section>
       <div className="discipline-strip flex flex-wrap justify-between gap-4">
-        <span><span className="chrome-bracket" aria-hidden="true">[</span> Software development <span className="chrome-bracket" aria-hidden="true">]</span></span>
+        <span>
+          <span className="chrome-bracket" aria-hidden="true">
+            [
+          </span>{" "}
+          Software development{" "}
+          <span className="chrome-bracket" aria-hidden="true">
+            ]
+          </span>
+        </span>
         <span aria-hidden="true">↗</span>
-        <span><span className="chrome-bracket" aria-hidden="true">[</span> Data platforms <span className="chrome-bracket" aria-hidden="true">]</span></span>
+        <span>
+          <span className="chrome-bracket" aria-hidden="true">
+            [
+          </span>{" "}
+          Data platforms{" "}
+          <span className="chrome-bracket" aria-hidden="true">
+            ]
+          </span>
+        </span>
         <span aria-hidden="true">↗</span>
-        <span><span className="chrome-bracket" aria-hidden="true">[</span> AI experiments <span className="chrome-bracket" aria-hidden="true">]</span></span>
+        <span>
+          <span className="chrome-bracket" aria-hidden="true">
+            [
+          </span>{" "}
+          AI experiments{" "}
+          <span className="chrome-bracket" aria-hidden="true">
+            ]
+          </span>
+        </span>
       </div>
       <section
         className="landing-section section-divider introduction grid items-center gap-8 md:grid-cols-[1fr_2fr]"
@@ -183,7 +206,9 @@ export default async function HomePage() {
         aria-labelledby="contact-title"
       >
         <div>
-          <p className="eyebrow contact-brand"><BrandIcon size={28} /> 04 / Contact</p>
+          <p className="eyebrow contact-brand">
+            <BrandIcon size={28} /> 04 / Contact
+          </p>
           <h2 id="contact-title">What are you working on?</h2>
           <p>
             Have a project in mind or an existing application that needs work?
@@ -195,7 +220,9 @@ export default async function HomePage() {
         </div>
         <div className="contact-details">
           {profile ? (
-            <ProfileContactDetails introduction={profile.contact_introduction || ""} />
+            <ProfileContactDetails
+              introduction={profile.contact_introduction || ""}
+            />
           ) : (
             <p className="profile-error" role="alert">
               Contact details are temporarily unavailable. Please try again
