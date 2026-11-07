@@ -13,3 +13,7 @@ try {
 
 await mkdir(dirname(standaloneStaticDirectory), { recursive: true });
 await cp(staticDirectory, standaloneStaticDirectory, { recursive: true, force: true });
+await cp(resolve(frontendRoot, "public"), resolve(frontendRoot, ".next/standalone/public"), {
+  recursive: true,
+  force: true,
+});

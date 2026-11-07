@@ -39,9 +39,20 @@ test("public pages have no axe WCAG 2.2 AA violations or unnamed controls", asyn
     expect(unnamedControls, `${route.name} has unnamed interactive controls`).toEqual([]);
 
     const imageAlt = await page.locator("main img").evaluateAll((images) =>
-      images.map((image) => (image as HTMLImageElement).alt.trim()),
+      images.filter((image) => image.getAttribute("aria-hidden") !== "true" || image.getAttribute("alt") !== "")
+        .map((image) => image.getAttribute("alt")?.trim() ?? ""),
     );
     expect(imageAlt, `${route.name} image alt text`).not.toContain("");
+    const brokenImages = await page.locator("main img").evaluateAll(async (images) => {
+      await Promise.all(images.map(async (image) => {
+        const img = image as HTMLImageElement;
+        img.loading = "eager";
+        await img.decode().catch(() => {});
+      }));
+      return images.filter((image) => !(image as HTMLImageElement).naturalWidth)
+        .map((image) => (image as HTMLImageElement).src);
+    });
+    expect(brokenImages, `${route.name} images load`).toEqual([]);
 
     const headings = await page.locator("main h1, main h2, main h3, main h4, main h5, main h6")
       .evaluateAll((elements) => elements.map((element) => Number(element.tagName.slice(1))));
@@ -118,11 +129,21 @@ test("skip link, keyboard focus, code scrolling, and enlarged text work at mobil
   }));
   expect(codeLayout.overflowX).toBe("auto");
   expect(codeLayout.contentWidth).toBeGreaterThan(codeLayout.visibleWidth);
+  await code.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => code.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
 
   for (const route of publicPages) {
     await loadPage(page, route.path);
     await page.addStyleTag({ content: ":root { font-size: 200% !important; }" });
     const width = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(width, `${route.name} reflow at 200% text`).toBeLessThanOrEqual(320);
+    const main = page.getByRole("main");
+    expect(await main.evaluate((element) => element.clientHeight), `${route.name} has room to scroll`).toBeGreaterThan(0);
+    await main.hover();
+    await page.mouse.wheel(0, 500);
+    await expect.poll(() => main.evaluate((element) => element.scrollTop), {
+      message: `${route.name} mobile content scrolls with enlarged text`,
+    }).toBeGreaterThan(0);
   }
 });

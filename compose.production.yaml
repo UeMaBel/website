@@ -54,9 +54,11 @@ services:
       POSTGRES_PORT: "5432"
       STATISTICS_ENABLED: ${STATISTICS_ENABLED:-true}
       DJANGO_MEDIA_ROOT: /data/media
-    command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn --bind=0.0.0.0:8000 --workers=2 --error-logfile=- config.wsgi:application"]
+      DJANGO_STATIC_ROOT: /data/static
+    command: ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec gunicorn --bind=0.0.0.0:8000 --workers=2 --error-logfile=- config.wsgi:application"]
     volumes:
       - media_data:/data/media
+      - static_data:/data/static
     networks:
       - database
       - application
@@ -119,6 +121,8 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      - static_data:/srv/static:ro
+      - media_data:/srv/media:ro
     networks:
       - application
     depends_on:
@@ -151,7 +155,17 @@ configs:
 
       ${SITE_DOMAIN:?Set SITE_DOMAIN in the protected production environment file} {
         encode zstd gzip
-        @django path /api/* /admin /admin/* /static/* /media/*
+        handle_path /static/* {
+          root * /srv/static
+          file_server
+        }
+        handle_path /media/* {
+          root * /srv/media
+          header X-Content-Type-Options nosniff
+          header Content-Security-Policy "default-src 'none'; sandbox"
+          file_server
+        }
+        @django path /api/* /admin /admin/*
         handle @django {
           reverse_proxy backend:8000
         }
@@ -169,5 +183,6 @@ networks:
 volumes:
   postgres_data:
   media_data:
+  static_data:
   caddy_data:
   caddy_config:

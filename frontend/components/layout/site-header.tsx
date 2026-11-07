@@ -20,10 +20,10 @@ export function SiteHeader() {
         >
           <span className="site-mark-symbol" aria-hidden="true">
             <BrandIcon className="site-mark-icon" size={38} />
-            <span className="site-mark-word">ebel</span>
+            <span className="site-mark-word" />
           </span>
           <span className="site-mark-name">
-            <span>Matthias</span>
+            <span>Matthias</span>{" "}
             <span>Uebelacker</span>
           </span>
         </Link>

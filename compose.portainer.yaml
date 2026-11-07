@@ -1,0 +1,9 @@
+# Merge with compose.production.yaml, then render with --no-interpolate.
+# Portainer receives the rendered single file; it never builds application images.
+services:
+  backend:
+    build: !reset null
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE to a published image digest}
+  frontend:
+    build: !reset null
+    image: ${FRONTEND_IMAGE:?Set FRONTEND_IMAGE to a published image digest}

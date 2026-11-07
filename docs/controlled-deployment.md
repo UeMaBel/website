@@ -1,5 +1,9 @@
 # Controlled production deployment
 
+This is the legacy SSH deployment path. For automatic delivery to a
+Portainer-managed stack, use [Portainer deployment](portainer-deployment.md).
+Use one deployment owner per stack; do not target the same installation with both.
+
 `.github/workflows/deploy-production.yml` is a manually dispatched deployment
 workflow. It does not create a host, configure DNS/firewall, provision a
 database, or deploy automatically. Do not run it until an operator has prepared

@@ -1,5 +1,9 @@
 # Versioned container images
 
+This page describes semantic-version releases. The automatic
+[Portainer pipeline](portainer-deployment.md) also publishes `sha-<commit>`
+images after CI succeeds on `main`, then deploys their immutable digests.
+
 `.github/workflows/publish-images.yml` publishes the production backend and
 frontend images to GitHub Container Registry (GHCR) after a semantic-version
 tag points at a commit already integrated into `main`. It accepts only tags of

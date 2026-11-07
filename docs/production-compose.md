@@ -1,5 +1,9 @@
 # Production Compose configuration
 
+For CI publishing and automatic Portainer updates, follow
+[Portainer deployment](portainer-deployment.md). The commands below describe
+direct Compose management; let Portainer own its stack once configured.
+
 `compose.production.yaml` describes the single host production stack. It does
 not provision a server, DNS, firewall, backups, or credentials. Set those up
 separately before starting the stack.
@@ -23,8 +27,10 @@ only published ingress and automatically redirects HTTP to HTTPS. Django's
 own redirect stays disabled so server-side frontend requests can use the
 private HTTP backend URL. Browser traffic enters through Caddy, and the
 backend has no published port. Uploaded files use the persistent
-`DJANGO_MEDIA_ROOT` volume. Django's `DJANGO_STATIC_ROOT` is configurable for
-the static file serving layer, which is documented separately.
+`DJANGO_MEDIA_ROOT` volume. Startup collects Django static assets into the
+`static_data` volume. Caddy serves that volume and uploaded media through
+read-only mounts; uploaded media responses include `nosniff` and a sandbox
+content security policy.
 
 Keep the environment file readable only by the deployment operator. Do not
 commit it or reuse development credentials. The checked-in example contains
