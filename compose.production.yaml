@@ -33,9 +33,7 @@ services:
           memory: 256M
 
   backend:
-    build:
-      context: ./backend
-      target: production
+    image: ghcr.io/uemabel/personal-website-backend:prod
     restart: unless-stopped
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in the protected production environment file}
@@ -82,9 +80,7 @@ services:
           memory: 256M
 
   frontend:
-    build:
-      context: ./frontend
-      target: production
+    image: ghcr.io/uemabel/personal-website-frontend:prod
     restart: unless-stopped
     environment:
       BACKEND_API_URL: http://backend:8000

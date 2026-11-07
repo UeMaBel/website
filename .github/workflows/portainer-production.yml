@@ -21,9 +21,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    outputs:
-      backend: ${{ steps.images.outputs.backend }}
-      frontend: ${{ steps.images.outputs.frontend }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -45,7 +42,7 @@ jobs:
         with:
           context: backend
           target: production
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ steps.names.outputs.prefix }}-backend:prod
@@ -61,7 +58,7 @@ jobs:
         with:
           context: frontend
           target: production
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ steps.names.outputs.prefix }}-frontend:prod
@@ -71,13 +68,4 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
-      - name: Export immutable image references
-        id: images
-        env:
-          PREFIX: ${{ steps.names.outputs.prefix }}
-          BACKEND_DIGEST: ${{ steps.backend.outputs.digest }}
-          FRONTEND_DIGEST: ${{ steps.frontend.outputs.digest }}
-        run: |
-          echo "backend=$PREFIX-backend@$BACKEND_DIGEST" >> "$GITHUB_OUTPUT"
-          echo "frontend=$PREFIX-frontend@$FRONTEND_DIGEST" >> "$GITHUB_OUTPUT"
 

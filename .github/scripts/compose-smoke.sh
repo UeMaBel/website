@@ -12,6 +12,7 @@ fi
 
 ci_project="website-ci-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-0}-$$"
 ci_env_file="$(mktemp "${TMPDIR:-/tmp}/website-compose-ci.XXXXXX")"
+production_env_file="$(mktemp "${TMPDIR:-/tmp}/website-compose-production-ci.XXXXXX")"
 home_html="$(mktemp "${TMPDIR:-/tmp}/website-home-ci.XXXXXX")"
 admin_html="$(mktemp "${TMPDIR:-/tmp}/website-admin-ci.XXXXXX")"
 media_body="$(mktemp "${TMPDIR:-/tmp}/website-media-ci.XXXXXX")"
@@ -41,7 +42,7 @@ cleanup() {
     fi
   fi
   compose down --volumes --remove-orphans --timeout 10 >/dev/null 2>&1 || true
-  rm -f "$ci_env_file" "$home_html" "$admin_html" "$media_body" \
+  rm -f "$ci_env_file" "$production_env_file" "$home_html" "$admin_html" "$media_body" \
     "$draft_body" "$list_body" "$preview_body"
   exit "$result"
 }
@@ -60,12 +61,14 @@ DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend
 PROXY_PORT=$ci_port
 PUBLIC_SITE_ORIGIN=http://localhost:$ci_port
 SITE_DOMAIN=example.invalid
+IMAGE_PREFIX=ghcr.io/example
 EOF
+cp "$ci_env_file" "$production_env_file"
 unset db_password django_secret
 
 echo "Validating local and production Compose configurations."
 compose config --quiet
-docker compose --project-name "$ci_project-production" --env-file "$ci_env_file" \
+docker compose --project-name website-ci-production --env-file "$production_env_file" \
   --file compose.production.yaml config --quiet
 
 echo "Building frontend and backend production containers."
