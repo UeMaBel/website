@@ -76,7 +76,7 @@ or missing CV references, singleton ownership, and invalid contact values.
 
 ## Page introductions
 
-The profile API includes `contact_introduction`, `projects_introduction`, `impressum`, and `dsgvo`, all Markdown strings (empty when unset or when the profile is missing). Edit them on the singleton About/CV admin record. Single line breaks are preserved by the frontend Markdown renderer.
+The profile API includes `contact_introduction`, `projects_introduction`, `impressum`, all Markdown strings (empty when unset or when the profile is missing). Edit them on the singleton About/CV admin record. Single line breaks are preserved by the frontend Markdown renderer.
 
 Admin labels describe where each field appears; stored attribute and API names remain unchanged so existing content and clients are preserved:
 
@@ -86,11 +86,12 @@ Admin labels describe where each field appears; stored attribute and API names r
 | `about_biography` | `biography` | About / CV biography |
 | `contact_get_in_touch` | `contact_introduction` | Contact business card and homepage contact panel (shared content) |
 | `contact_impressum` | `impressum` | Contact only, below Get in touch; hidden when empty |
-| `datenschutz_dsgvo` | `dsgvo` | Datenschutz page (`/datenschutz`), linked beside Impressum in the footer |
 | `projects_introduction` | `projects_introduction` | Projects overview |
 | `profile_email` | `email` | Public API; not automatically inserted into the Markdown business card |
 | `about_cv` | `cv` / `cv_url` | About / CV download |
 
 The business card shows the portrait plus exactly the `contact_get_in_touch` Markdown. Impressum is a separate section with the same left heading, vertical divider, and right content layout. Individual project content is unchanged.
 
-The Datenschutz page uses the same ContentSection heading/divider layout as Impressum. Its Markdown is independently editable in `datenschutz_dsgvo`; no policy text is generated automatically. Empty content displays an unconfigured notice, and API failures display an error message.
+
+
+Public profile pages now use the frontend page-content/profile.json snapshot. The profile fields remain in the database and API for now. Privacy content is bundled in the frontend from docs/datenschutzerklaerung-vorlage.md; migration 0006 removes the dsgvo field.

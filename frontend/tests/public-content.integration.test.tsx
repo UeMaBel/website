@@ -85,89 +85,20 @@ afterEach(() => {
 });
 
 describe("public content journeys", () => {
-  it("renders the DSGVO field as Markdown on the Datenschutz page", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({
-      ...profile(null),
-      dsgvo: "## Hosting\n\nStored **securely**.\nSecond line.\n\n[Email](mailto:privacy@example.test)",
-    }));
-    const { container } = render(await DatenschutzPage());
-    expect(screen.getByRole("heading", { level: 1, name: "Datenschutz" })).toBeTruthy();
-    const section = screen.getByRole("region", { name: "Datenschutzerklärung" });
-    expect(section.classList.contains("section-divider")).toBe(true);
-    expect(screen.getByText("securely").tagName).toBe("STRONG");
-    expect(container.querySelector(".markdown br")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Email" }).getAttribute("href")).toBe("mailto:privacy@example.test");
-  });
-
-  it("handles empty or unavailable privacy content", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ ...profile(null), dsgvo: " \n " }));
-    const empty = render(await DatenschutzPage());
-    expect(screen.getByRole("status").textContent).toContain("Noch keine");
-    empty.unmount();
-    fetchMock.mockRejectedValueOnce(new Error("offline"));
-    render(await DatenschutzPage());
-    expect(screen.getByRole("alert").textContent).toContain("vorübergehend nicht verfügbar");
-  });
-
-  it("preserves single line breaks in About Markdown without changing paragraphs or code", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({
-      ...profile(null),
-      biography: "First **line**.\nSecond line.\r\nThird line.\n\nAnother paragraph.\n\n```text\nfirst\nsecond\n```",
-    }));
-    const { container } = render(await AboutPage());
-    const biography = container.querySelector(".markdown");
-    expect(biography?.querySelectorAll("p")).toHaveLength(2);
-    expect(biography?.querySelectorAll("p:first-child br")).toHaveLength(2);
-    expect(biography?.querySelector("strong")?.textContent).toBe("line");
-    expect(biography?.querySelector("pre code")?.textContent).toBe("first\nsecond\n");
-    expect(biography?.querySelector("pre br")).toBeNull();
-  });
-
-  it("renders backend Markdown introductions on Contact and Projects", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({
-      ...profile(null),
-      contact_introduction: "## My business card\n\nLet's **build** something.\n\n![Email](/icons/email.svg) [Write to me](mailto:hello@example.test)\n![GitHub](/icons/github.svg) [My GitHub](https://github.com/example)",
-      projects_introduction: "Explore my **experiments**.",
-    }));
-    const contact = render(await ContactPage());
-    expect(screen.getByText("build").tagName).toBe("STRONG");
-    expect(screen.getByRole("heading", { name: "Get in touch" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "My business card" })).toBeTruthy();
-    expect(screen.getByRole("img", { name: "Email" }).className).toBe("markdown-icon");
-    expect(screen.getByRole("img", { name: "GitHub" }).className).toBe("markdown-icon");
-    expect(screen.getByRole("link", { name: "Write to me" }).getAttribute("href")).toBe("mailto:hello@example.test");
-    contact.unmount();
-    fetchMock.mockImplementation((url: URL) => Promise.resolve(jsonResponse(
-      url.pathname === "/api/v1/projects/"
-        ? { count: 0, results: [] }
-        : { ...profile(null), projects_introduction: "Explore my **experiments**." },
-    )));
-    render(await ProjectsPage());
-    expect(screen.getByText("experiments").tagName).toBe("STRONG");
-  });
-
-  it("renders Impressum Markdown below Get in touch only on the Contact page", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({
-      ...profile(null),
-      contact_introduction: "Business card details.",
-      impressum: "Responsible: **Site Owner**\nExample address",
-    }));
-    const contact = render(await ContactPage());
-    const card = screen.getByRole("region", { name: "Get in touch" });
-    const impressum = screen.getByRole("region", { name: "Impressum" });
-    expect(card.compareDocumentPosition(impressum) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(impressum.querySelector("strong")?.textContent).toBe("Site Owner");
-    expect(impressum.querySelector("br")).toBeTruthy();
-    contact.unmount();
-    render(await HomePage());
-    expect(screen.queryByRole("region", { name: "Impressum" })).toBeNull();
-    expect(screen.queryByText("Example address")).toBeNull();
-  });
-
-  it("hides an empty Impressum section", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ ...profile(null), impressum: " \n " }));
-    render(await ContactPage());
-    expect(screen.queryByRole("region", { name: "Impressum" })).toBeNull();
+  it("keeps privacy, profile and contact content available without the backend", async () => {
+    fetchMock.mockRejectedValue(new Error("offline"));
+    const privacy = render(DatenschutzPage());
+    expect(screen.getByRole("heading", { name: "Datenschutz", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Datenschutzhinweise von Hetzner" })).toBeTruthy();
+    expect(screen.queryByText(/Arbeitsfassung/)).toBeNull();
+    privacy.unmount();
+    const about = render(AboutPage());
+    expect(screen.getByText("Hi, I'm Matthias.")).toBeTruthy();
+    about.unmount();
+    render(ContactPage());
+    expect(screen.getByRole("link", { name: "Email" }).getAttribute("href")).toBe("mailto:matthias@uebel.dev");
+    expect(screen.getByRole("region", { name: "Impressum" })).toBeTruthy();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("keeps projects available when the optional profile request fails", async () => {
@@ -181,17 +112,14 @@ describe("public content journeys", () => {
   });
 
   it("lets readers navigate from the home page to public sections", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({
-      ...profile(null),
-      contact_introduction: "Contact me at [hello@example.test](mailto:hello@example.test).",
-    }));
+    fetchMock.mockResolvedValue(jsonResponse({ count: 0, results: [] }));
 
     render(await HomePage());
 
     expect(screen.getByRole("link", { name: "Read the blog" }).getAttribute("href")).toBe("/blog");
     expect(screen.getByRole("link", { name: "Projects" }).getAttribute("href")).toBe("/projects");
     expect(screen.getByRole("link", { name: "About / CV" }).getAttribute("href")).toBe("/about");
-    expect(screen.getByRole("link", { name: "hello@example.test" }).getAttribute("href")).toBe("mailto:hello@example.test");
+    expect(screen.getByRole("link", { name: "Email" }).getAttribute("href")).toBe("mailto:matthias@uebel.dev");
     expect(screen.queryByRole("link", { name: "owner@example.test" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Professional profile" })).toBeNull();
   });
@@ -256,16 +184,6 @@ describe("public content journeys", () => {
 
     expect(screen.getByText("A downloadable CV is not available yet.", { selector: '[role="status"]' })).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Download CV (PDF)" })).toBeNull();
-  });
-
-  it("makes a configured CV download available", async () => {
-    fetchMock.mockResolvedValue(jsonResponse(profile("/media/uploads/cv.pdf")));
-
-    render(await AboutPage());
-
-    const cvLink = screen.getByRole("link", { name: "Download CV (PDF)" });
-    expect(cvLink.getAttribute("href")).toBe("/media/uploads/cv.pdf");
-    expect(cvLink.hasAttribute("download")).toBe(true);
   });
 
   it("shows project content when repository and demo links are absent", async () => {

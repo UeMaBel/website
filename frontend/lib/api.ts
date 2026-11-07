@@ -104,7 +104,6 @@ export interface PublicProfile {
   biography: string;
   contact_introduction: string;
   impressum: string;
-  dsgvo: string;
   projects_introduction: string;
   email: string;
   cv_url: string | null;

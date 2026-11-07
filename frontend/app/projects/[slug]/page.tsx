@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
         title: project.title,
         description,
         url: canonical,
-        siteName: "Personal website",
+        siteName: "Software, Data, AI, Writing",
       },
       twitter: { card: "summary", title: project.title, description },
     };

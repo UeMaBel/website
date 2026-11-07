@@ -20,12 +20,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const publicOrigin = getPublicSiteOrigin();
   return {
     metadataBase: publicOrigin,
-    title: { default: "Personal website", template: "%s | Personal website" },
+    title: { default: "Software, Data, AI, Writing", template: "%s | Software, Data, AI, Writing" },
     description: "Independent software engineering and AI expertise, technical writing, and projects.",
     openGraph: {
       type: "website",
-      siteName: "Personal website",
-      title: "Personal website",
+      siteName: "Software, Data, AI, Writing",
+      title: "Software, Data, AI, Writing",
       description: "Independent software engineering and AI expertise, technical writing, and projects.",
     },
     twitter: { card: "summary" },

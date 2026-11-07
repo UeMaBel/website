@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         title: post.title,
         description,
         url: new URL(canonicalPath, getPublicSiteOrigin()).toString(),
-        siteName: "Personal website",
+        siteName: "Software, Data, AI, Writing",
         publishedTime: post.published_at,
         authors: [post.author.name],
         tags: post.tags.map((tag) => tag.name),

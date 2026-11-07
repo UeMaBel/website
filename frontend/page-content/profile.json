@@ -1,0 +1,56 @@
+{
+  "display_name": "Matthias Uebelacker",
+  "biography": "Hi, I'm Matthias.\r\n\r\nI'm a software developer and tech enthusiast. I like trying out new tech, figuring out how it works and occasionally getting a bit too deep into a rabbit hole. I've been self-employed since 2020, building software for companies and working on my own projects along the way.\r\n\r\nThat's work I enjoy: understanding how people do their jobs, finding the manual steps that get in their way and building something that helps. My background is in business mathematics and actuarial science, so working through data and calculations is familiar territory too.\r\n\r\nAt the moment, a lot of my curiosity goes into AI and coding agents. I use them in my daily development work and explore their limits in side projects, including a chess application and a tool for automating parts of my agent workflow. There are still plenty of rabbit holes left.\r\n\r\nHave a look at my [GitHub projects](https://github.com/UeMaBel) to see what I'm working on and whether it fits what you have in mind. If it does, [get in touch](/contact).",
+  "contact_introduction": "## Matthias Uebelacker\r\nMühlenstr. 1\r\n85664 Hohenlinden\r\n\r\n![Email](/icons/email.svg) [Email](mailto:matthias@uebel.dev)\r\n![GitHub](/icons/github.svg) [GitHub](https://github.com/uemabel)",
+  "impressum": "## Impressum\r\n\r\n### Angaben gemäß § 5 DDG\r\nMatthias Uebelacker\r\nMühlenstr. 1\r\n85664 Hohenlinden\r\n\r\n### Kontakt\r\nTelefonnummer: +49 163 3787 356\r\nE-Mail: matthias@uebel.dev  \r\n\r\n### Umsatzsteuer-ID\r\nUmsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:  \r\nDE323992916\r\n\r\n### Redaktionell verantwortlich\r\nMatthias Uebelacker\r\nMühlenstr. 1\r\n85664 Hohenlinden",
+  "projects_introduction": "My last big project was a platform for collecting, processing and presenting operational data. Around 100 people use it daily across more than 10 sites in four countries. I used Django and Celery for the backend and React for the frontend. As lead developer, I handled the architecture, development, stakeholder communication and everything else that comes with building and shipping software in a non-tech company.",
+  "email": "matthias.uebelacker@gmail.com",
+  "cv_url": null,
+  "experience": [
+    {
+      "position": 0,
+      "employer": "BDE Datahub",
+      "role": "Lead",
+      "start_date": "2026-11-03",
+      "end_date": "2026-11-03",
+      "description": "Collecting operational data across different sites gets complicated quickly. Data comes from APIs, databases and files, while some values still need to be entered or corrected by people. Bringing it into one place is only part of the job: it also needs consistent calculations, planning and a clear process for approving changes.\r\n\r\nThis project brought those tasks together in an internal platform used by around 100 people at 14 sites across four countries."
+    }
+  ],
+  "education": [
+    {
+      "position": 0,
+      "institution": "FH Rosenheim",
+      "qualification": "Business Mathematics and actuarial Science",
+      "start_date": "2023-02-10",
+      "end_date": "2026-11-05",
+      "description": ""
+    },
+    {
+      "position": 0,
+      "institution": "Deutsche Telekom AG",
+      "qualification": "Fachinformatiker Systemintegration",
+      "start_date": "2026-11-05",
+      "end_date": "2026-11-05",
+      "description": ""
+    }
+  ],
+  "skills": [
+    {
+      "position": 0,
+      "name": "Python",
+      "category": "Backend"
+    },
+    {
+      "position": 0,
+      "name": "Django / Django REST Framework",
+      "category": "Backend"
+    }
+  ],
+  "links": [
+    {
+      "position": 0,
+      "label": "GitHub",
+      "url": "http://github.com/UeMaBel"
+    }
+  ]
+}

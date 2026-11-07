@@ -2,7 +2,7 @@ import { PageHeading } from "../../components/content/page-heading";
 import { ContentSection } from "../../components/content/content-section";
 import { Markdown } from "../../components/content/markdown";
 import { ProfileContactDetails } from "../../components/content/profile-contact-details";
-import { getProfile } from "../../lib/api";
+import profile from "../../page-content/profile.json";
 import { publicPageMetadata } from "../../lib/metadata";
 
 export const metadata = publicPageMetadata(
@@ -11,33 +11,21 @@ export const metadata = publicPageMetadata(
   "/contact",
 );
 
-export default async function ContactPage() {
-  try {
-    const profile = await getProfile();
-    return (
-      <>
-        <PageHeading title="Contact" />
-        <section className="business-card content-section section-divider" aria-labelledby="business-card-title">
-          <h2 id="business-card-title">Get in touch</h2>
-          <div className="content-section-body">
-            <ProfileContactDetails introduction={profile.contact_introduction || ""} />
-          </div>
-        </section>
-        {profile.impressum?.trim() && (
-          <ContentSection id="impressum" title="Impressum">
-            <Markdown source={profile.impressum} />
-          </ContentSection>
-        )}
-      </>
-    );
-  } catch {
-    return (
-      <>
-        <PageHeading title="Contact" />
-        <p className="profile-error" role="alert">
-          Contact details are temporarily unavailable. Please try again later.
-        </p>
-      </>
-    );
-  }
+export default function ContactPage() {
+  return (
+    <>
+      <PageHeading title="Contact" />
+      <section className="business-card content-section section-divider" aria-labelledby="business-card-title">
+        <h2 id="business-card-title">Get in touch</h2>
+        <div className="content-section-body">
+          <ProfileContactDetails introduction={profile.contact_introduction || ""} />
+        </div>
+      </section>
+      {profile.impressum?.trim() && (
+        <ContentSection id="impressum" title="Impressum">
+          <Markdown source={profile.impressum} />
+        </ContentSection>
+      )}
+    </>
+  );
 }

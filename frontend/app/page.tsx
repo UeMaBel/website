@@ -1,3 +1,4 @@
+import profile from "../page-content/profile.json";
 import { ContentThumbnail } from "../components/content/content-thumbnail";
 import { PointField } from "../components/layout/point-field";
 import { BrandIcon } from "../components/layout/brand-icon";
@@ -5,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Markdown } from "../components/content/markdown";
 import { ProfileContactDetails } from "../components/content/profile-contact-details";
-import { getBlogPosts, getProfile, getProjects } from "../lib/api";
+import { getBlogPosts, getProjects } from "../lib/api";
 import { publicPageMetadata } from "../lib/metadata";
 
 export const metadata = publicPageMetadata(
@@ -15,11 +16,9 @@ export const metadata = publicPageMetadata(
 );
 
 export default async function HomePage() {
-  const [profileResult, projectsResult, postsResult] = await Promise.allSettled(
-    [getProfile(), getProjects(), getBlogPosts({ pageSize: 3 })],
+  const [projectsResult, postsResult] = await Promise.allSettled(
+    [getProjects(), getBlogPosts({ pageSize: 3 })],
   );
-  const profile =
-    profileResult.status === "fulfilled" ? profileResult.value : null;
   const projects =
     projectsResult.status === "fulfilled"
       ? projectsResult.value.results.slice(0, 2)

@@ -1,8 +1,9 @@
+import profile from "../../page-content/profile.json";
 import { ContentThumbnail } from "../../components/content/content-thumbnail";
 import Link from "next/link";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
-import { getProfile, getProjects } from "../../lib/api";
+import { getProjects } from "../../lib/api";
 import { publicPageMetadata } from "../../lib/metadata";
 
 export const metadata = publicPageMetadata(
@@ -13,10 +14,7 @@ export const metadata = publicPageMetadata(
 
 export default async function ProjectsPage() {
   try {
-    const [projects, profile] = await Promise.all([
-      getProjects(),
-      getProfile().catch(() => null),
-    ]);
+    const projects = await getProjects();
 
     return (
       <>

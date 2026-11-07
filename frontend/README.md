@@ -188,3 +188,12 @@ Version sources: [Node.js release support](https://nodejs.org/en/about/previous-
 [Next.js support policy](https://nextjs.org/support-policy), and the npm registry.
 Next.js 16.4.3 includes the fixes described in the
 [October security update](https://nextjs.org/blog/nextjs-security-update-october-14-2026).
+
+## Static owner content
+
+About/CV, contact details, Impressum and page introductions now use the bundled
+`page-content/profile.json` snapshot. Existing database profile fields are retained
+but do not control these pages. Privacy text is bundled from the existing policy
+in `docs/datenschutzerklaerung-vorlage.md`; the database `dsgvo` field is removed by
+backend migration `0006_remove_profile_dsgvo`. Rebuild the frontend after editing
+static content. See `page-content/README.md`.

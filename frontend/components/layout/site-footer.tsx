@@ -10,7 +10,7 @@ export function SiteFooter() {
           <BrandIcon size={28} />
         </Link>
         <p>
-          <span>Personal website · Software engineering and technical writing</span>
+          <span>Software, Data, AI, Writing</span>
         </p>
         <nav className="footer-legal" aria-label="Legal information">
           <Link href="/contact#impressum">Impressum</Link>

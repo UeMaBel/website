@@ -20,10 +20,6 @@ class Profile(models.Model):
         'contact_impressum', blank=True,
         help_text='Markdown source shown below Get in touch on Contact only; hidden when empty',
     )
-    dsgvo = models.TextField(
-        'datenschutz_dsgvo', blank=True,
-        help_text='Markdown source for the Datenschutz page, linked from the footer',
-    )
     projects_introduction = models.TextField(
         'projects_introduction', blank=True, help_text='Markdown source for the Projects overview',
     )
