@@ -21,6 +21,11 @@ export class ApiError extends Error {
   }
 }
 
+export interface ContentThumbnail {
+  url: string;
+  alt_text: string;
+}
+
 export interface BlogAuthor {
   username: string;
   name: string;
@@ -36,6 +41,7 @@ export interface BlogTagWithCount extends BlogTag {
 }
 
 export interface BlogPostSummary {
+  thumbnail?: ContentThumbnail | null;
   slug: string;
   title: string;
   published_at: string;
@@ -115,6 +121,7 @@ export interface ProjectImage {
 }
 
 export interface Project {
+  thumbnail?: ContentThumbnail | null;
   slug: string;
   title: string;
   problem: string;

@@ -18,6 +18,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     change_form_template = 'admin/blog/blogpost/change_form.html'
     list_display = ['title', 'author', 'status', 'published_at']
     list_filter = ['status', 'tags', 'author']
+    autocomplete_fields = ['thumbnail']
     search_fields = ['title', 'slug', 'body']
     filter_horizontal = ['tags']
     readonly_fields = ['created_at', 'updated_at']

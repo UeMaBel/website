@@ -1,3 +1,4 @@
+import { ContentThumbnail } from "../../components/content/content-thumbnail";
 import Link from "next/link";
 import { ApiError, getBlogPosts, getBlogTags } from "../../lib/api";
 import { PageHeading } from "../../components/content/page-heading";
@@ -99,12 +100,15 @@ export default async function BlogPage({
               {posts.results.map((post) => (
                 <li className="blog-post" key={post.slug}>
                   <p className="eyebrow blog-post-kicker">Field notes / {post.tags[0]?.name || "Engineering"}</p>
+                  <div className="blog-post-heading">
                   <h2>
                     <Link href={`/blog/${encodeURIComponent(post.slug)}`}>
                       {post.title}
                       <span className="blog-post-arrow" aria-hidden="true">↗</span>
                     </Link>
                   </h2>
+                  <ContentThumbnail image={post.thumbnail} className="blog-overview-thumbnail" />
+                  </div>
                   <p className="blog-post-meta">
                     <span>By {post.author.name}</span>
                     <time dateTime={post.published_at}>

@@ -13,10 +13,11 @@ class ProjectImageInline(admin.TabularInline):
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ['title', 'slug']
-    search_fields = ['title', 'slug', 'problem', 'contribution']
+    autocomplete_fields = ['thumbnail']
+    search_fields = ['title', 'slug', 'thumbnail', 'problem', 'contribution']
     inlines = [ProjectImageInline]
     fieldsets = [
-        (None, {'fields': ['title', 'slug', 'problem', 'contribution', 'technologies', 'description']}),
+        (None, {'fields': ['title', 'slug', 'thumbnail', 'problem', 'contribution', 'technologies', 'description']}),
         ('External links (optional)', {
             'fields': ['repository_url', 'demo_url'],
             'description': 'Links are optional. A project remains available when its demo is offline.',

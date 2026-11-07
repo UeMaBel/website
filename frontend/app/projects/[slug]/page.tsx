@@ -1,3 +1,4 @@
+import { ContentThumbnail } from "../../../components/content/content-thumbnail";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Markdown } from "../../../components/content/markdown";
@@ -70,6 +71,8 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             </ul>
           )}
         </PageHeading>
+
+        <ContentThumbnail image={project.thumbnail} className="detail-thumbnail" />
 
         {project.problem.trim() && (
           <section aria-labelledby="project-problem-heading">

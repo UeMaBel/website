@@ -36,6 +36,10 @@ def _post_data(post, include_body=False):
     data = {
         'slug': post.slug,
         'title': post.title,
+        'thumbnail': {
+            'url': post.thumbnail.file.url,
+            'alt_text': post.thumbnail.alt_text,
+        } if post.thumbnail_id else None,
         'published_at': post.published_at.isoformat() if post.published_at else None,
         'author': {
             'username': post.author.get_username(),
@@ -75,7 +79,7 @@ def public_blog_list(request):
         if not tag_is_public:
             return JsonResponse({'detail': 'Not found.'}, status=404)
         posts = posts.filter(tags__slug=tag_slug)
-    posts = posts.select_related('author').prefetch_related('tags')
+    posts = posts.select_related('author', 'thumbnail').prefetch_related('tags')
     paginator = Paginator(posts, page_size)
     try:
         page = paginator.page(page_number)
@@ -110,7 +114,7 @@ def public_blog_detail(request, slug):
 
     post = (
         BlogPost.objects.filter(slug=slug, status=BlogPost.Status.PUBLISHED)
-        .select_related('author')
+        .select_related('author', 'thumbnail')
         .prefetch_related('tags')
         .first()
     )
@@ -146,7 +150,7 @@ def draft_blog_preview(request, slug):
 
     post = (
         BlogPost.objects.filter(slug=slug, status=BlogPost.Status.DRAFT)
-        .select_related('author')
+        .select_related('author', 'thumbnail')
         .prefetch_related('tags')
         .first()
     )

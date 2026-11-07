@@ -6,6 +6,11 @@ from uploads.models import UploadedMedia
 
 
 class Project(models.Model):
+    thumbnail = models.ForeignKey(
+        'uploads.UploadedMedia', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='%(app_label)s_thumbnails', limit_choices_to={'kind': 'image'},
+        help_text='Optional image used in cards and at the top of the detail page.',
+    )
     title = models.CharField(max_length=250)
     slug = models.SlugField(max_length=250, unique=True)
     problem = models.TextField(help_text='Markdown source')
@@ -26,6 +31,10 @@ class Project(models.Model):
 
     def clean(self):
         super().clean()
+        if self.thumbnail_id:
+            from uploads.models import UploadedMedia
+            if not UploadedMedia.objects.filter(pk=self.thumbnail_id, kind='image').exists():
+                raise ValidationError({'thumbnail': 'Choose uploaded image media.'})
         if not isinstance(self.technologies, list) or any(
             not isinstance(technology, str) or not technology.strip()
             for technology in self.technologies

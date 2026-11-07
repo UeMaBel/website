@@ -13,6 +13,10 @@ def _project_data(project):
     return {
         'slug': project.slug,
         'title': project.title,
+        'thumbnail': {
+            'url': project.thumbnail.file.url,
+            'alt_text': project.thumbnail.alt_text,
+        } if project.thumbnail_id else None,
         'problem': project.problem,
         'contribution': project.contribution,
         'technologies': project.technologies,
@@ -37,7 +41,7 @@ def public_project_list(request):
     if request.GET:
         return JsonResponse({'detail': 'This endpoint does not accept query parameters.'}, status=400)
 
-    projects = Project.objects.prefetch_related(PROJECT_IMAGES)
+    projects = Project.objects.select_related('thumbnail').prefetch_related(PROJECT_IMAGES)
     results = [_project_data(project) for project in projects]
     return JsonResponse({'count': len(results), 'results': results})
 
@@ -50,7 +54,7 @@ def public_project_detail(request, slug):
         return JsonResponse({'detail': 'This endpoint does not accept query parameters.'}, status=400)
 
     project = (
-        Project.objects.prefetch_related(PROJECT_IMAGES)
+        Project.objects.select_related('thumbnail').prefetch_related(PROJECT_IMAGES)
         .filter(slug=slug)
         .first()
     )

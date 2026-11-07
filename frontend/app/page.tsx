@@ -1,3 +1,4 @@
+import { ContentThumbnail } from "../components/content/content-thumbnail";
 import { PointField } from "../components/layout/point-field";
 import { BrandIcon } from "../components/layout/brand-icon";
 import Link from "next/link";
@@ -113,7 +114,7 @@ export default async function HomePage() {
                 href={`/projects/${encodeURIComponent(project.slug)}`}
                 key={project.slug}
               >
-                <div
+                {project.thumbnail ? <ContentThumbnail image={project.thumbnail} className="work-thumbnail" /> : <div
                   className={`project-art project-art-${i}`}
                   aria-hidden="true"
                 >
@@ -121,7 +122,7 @@ export default async function HomePage() {
                   <span className="art-caption">
                     ENGINEERING / {String(i + 1).padStart(2, "0")}
                   </span>
-                </div>
+                </div>}
                 <div className="card-copy">
                   <p className="eyebrow">
                     {project.technologies.slice(0, 3).join(" / ") ||

@@ -1,3 +1,4 @@
+import { ContentThumbnail } from "../../../../components/content/content-thumbnail";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -39,6 +40,8 @@ export default async function BlogPreviewPage({ params }: BlogPreviewPageProps) 
           <p className="blog-notice" role="status">Draft preview</p>
           <p className="blog-detail-meta">By {post.author.name}</p>
         </PageHeading>
+
+        <ContentThumbnail image={post.thumbnail} className="detail-thumbnail" />
 
         {post.tags.length > 0 && <BlogTagLinks tags={post.tags} label="Post tags" />}
 

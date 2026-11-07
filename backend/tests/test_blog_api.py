@@ -116,6 +116,7 @@ class PublicBlogApiTests(TestCase):
             'published_at': post.published_at.isoformat(),
             'author': {'username': 'owner', 'name': 'Site Owner'},
             'tags': [{'name': 'AI', 'slug': 'ai'}],
+            'thumbnail': None,
             'body': '## Markdown source',
         })
 
@@ -254,6 +255,7 @@ class DraftPreviewApiTests(TestCase):
             'published_at': None,
             'author': {'username': 'owner', 'name': 'owner'},
             'tags': [],
+            'thumbnail': None,
             'body': '# Draft source',
         })
         self.assertIn('no-store', response['Cache-Control'])

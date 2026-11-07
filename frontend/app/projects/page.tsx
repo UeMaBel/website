@@ -1,3 +1,4 @@
+import { ContentThumbnail } from "../../components/content/content-thumbnail";
 import Link from "next/link";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
@@ -30,6 +31,7 @@ export default async function ProjectsPage() {
             {projects.results.map((project) => (
               <li className="project-entry" key={project.slug}>
                 <article>
+                  <ContentThumbnail image={project.thumbnail} />
                   <h2>
                     <Link href={`/projects/${encodeURIComponent(project.slug)}`}>
                       {project.title}

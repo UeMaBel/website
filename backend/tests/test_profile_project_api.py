@@ -179,7 +179,7 @@ class PublicProjectApiTests(TestCase):
         for item in payload['results']:
             self.assertEqual(set(item), {
                 'slug', 'title', 'problem', 'contribution', 'technologies',
-                'description', 'repository_url', 'demo_url', 'images',
+                'description', 'repository_url', 'demo_url', 'images', 'thumbnail',
             })
             self.assertIsNone(item['repository_url'])
             self.assertIsNone(item['demo_url'])
