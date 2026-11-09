@@ -11,6 +11,7 @@ PROJECT_IMAGES = Prefetch('project_images', queryset=ProjectImage.objects.select
 
 def _project_data(project):
     return {
+        'position': project.position,
         'slug': project.slug,
         'title': project.title,
         'hide_thumbnail_on_detail': project.hide_thumbnail_on_detail,

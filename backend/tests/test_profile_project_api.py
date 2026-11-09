@@ -175,12 +175,29 @@ class PublicProjectApiTests(TestCase):
         self.assertEqual([item['slug'] for item in payload['results']], ['alpha', 'zulu'])
         for item in payload['results']:
             self.assertEqual(set(item), {
-                'slug', 'title', 'problem', 'contribution', 'technologies',
+                'position', 'slug', 'title', 'problem', 'contribution', 'technologies',
                 'description', 'repository_url', 'demo_url', 'images', 'thumbnail', 'hide_thumbnail_on_detail',
             })
             self.assertIsNone(item['repository_url'])
             self.assertIsNone(item['demo_url'])
             self.assertEqual(item['images'], [])
+
+    def test_project_listing_orders_by_position_before_title(self):
+        self.project('Alpha project', 'alpha', position=10)
+        first = self.project('Zulu project', 'zulu', position=-1)
+        self.project('Beta project', 'beta', position=0)
+        self.project('Default project', 'default')
+
+        payload = self.client.get('/api/v1/projects/').json()
+        self.assertEqual([item['slug'] for item in payload['results']], [
+            'zulu', 'beta', 'default', 'alpha',
+        ])
+        self.assertEqual([item['position'] for item in payload['results']], [-1, 0, 0, 10])
+
+        first.position = 20
+        first.save()
+        payload = self.client.get('/api/v1/projects/').json()
+        self.assertEqual(payload['results'][-1]['slug'], 'zulu')
 
     def test_project_detail_returns_optional_links_and_ordered_valid_image_urls(self):
         project = self.project(

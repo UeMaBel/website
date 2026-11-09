@@ -6,6 +6,11 @@ Markdown description, and optional HTTP or HTTPS repository and demo URLs.
 Titles do not regenerate slugs after edits. Projects can exist without either
 link or any images.
 
+Projects have an integer `position` (default `0`), editable on the admin form
+and directly in the project list. The API returns projects by ascending position,
+then title and primary key for ties. The frontend preserves this order, so the
+smallest position appears first. Existing projects receive position `0`.
+
 `ProjectImage` links projects to uploaded image media. Its records are exposed
 through `project.project_images` and store an independent nonnegative position,
 sorting by position then primary key for stable ties. A project cannot link the

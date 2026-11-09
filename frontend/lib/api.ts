@@ -121,6 +121,7 @@ export interface ProjectImage {
 }
 
 export interface Project {
+  position: number;
   hide_thumbnail_on_detail?: boolean;
   thumbnail?: ContentThumbnail | null;
   slug: string;

@@ -6,6 +6,7 @@ from uploads.models import UploadedMedia
 
 
 class Project(models.Model):
+    position = models.IntegerField(default=0)
     thumbnail = models.ForeignKey(
         'uploads.UploadedMedia', null=True, blank=True, on_delete=models.SET_NULL,
         related_name='%(app_label)s_thumbnails', limit_choices_to={'kind': 'image'},
@@ -28,7 +29,7 @@ class Project(models.Model):
         max_length=1000, blank=True, validators=[URLValidator(schemes=['http', 'https'])],
     )
     class Meta:
-        ordering = ['title', 'pk']
+        ordering = ['position', 'title', 'pk']
         constraints = [
             models.CheckConstraint(condition=~models.Q(slug=''), name='project_slug_nonempty'),
         ]
