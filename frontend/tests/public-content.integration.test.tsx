@@ -182,12 +182,22 @@ describe("public content journeys", () => {
     expect(screen.getByRole("link", { name: "Sample project" })).toBeTruthy();
   });
 
-  it("lets readers navigate from the home page to public sections", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ count: 0, results: [] }));
+  it.each([false, true])("shows homepage writing only when published posts exist (%s)", async (hasPosts) => {
+    fetchMock.mockImplementation((url: URL) => Promise.resolve(jsonResponse({
+      count: hasPosts && url.pathname === "/api/v1/blog/posts/" ? 1 : 0,
+      results: hasPosts && url.pathname === "/api/v1/blog/posts/" ? [post()] : [],
+    })));
 
     render(await HomePage());
 
-    expect(screen.getByRole("link", { name: "Read the blog" }).getAttribute("href")).toBe("/blog");
+    if (hasPosts) {
+      expect(screen.getByRole("link", { name: "Read the blog" }).getAttribute("href")).toBe("/blog");
+      expect(screen.getByRole("heading", { name: "Notes from the work" })).toBeTruthy();
+      expect(screen.getByRole("link", { name: /Published article/ }).getAttribute("href")).toBe("/blog/published-article");
+    } else {
+      expect(screen.queryByRole("link", { name: "Read the blog" })).toBeNull();
+      expect(screen.queryByRole("heading", { name: "Notes from the work" })).toBeNull();
+    }
     expect(screen.getByRole("link", { name: "Projects" }).getAttribute("href")).toBe("/projects");
     expect(screen.getByRole("link", { name: "About / CV" }).getAttribute("href")).toBe("/about");
     expect(screen.getByRole("link", { name: "Email" }).getAttribute("href")).toBe("mailto:matthias@uebel.dev");
@@ -248,13 +258,20 @@ describe("public content journeys", () => {
     expect(document.body.textContent).not.toContain("attack()");
   });
 
-  it("shows an accessible unavailable state when no CV is configured", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ ...profile(null), contact_introduction: "", impressum: "", projects_introduction: "" }));
+  it.each([null, "/media/cv.pdf"])("shows the CV section only when a download is configured (%s)", async (cvUrl) => {
+    fetchMock.mockResolvedValue(jsonResponse({ ...profile(cvUrl), contact_introduction: "", impressum: "", projects_introduction: "" }));
 
     render(await AboutPage());
 
-    expect(screen.getByText("A downloadable CV is not available yet.", { selector: '[role="status"]' })).toBeTruthy();
-    expect(screen.queryByRole("link", { name: "Download CV (PDF)" })).toBeNull();
+    if (cvUrl) {
+      expect(screen.getByRole("heading", { name: "Curriculum vitae" })).toBeTruthy();
+      const download = screen.getByRole("link", { name: "Download CV (PDF)" });
+      expect(download.getAttribute("href")).toBe(cvUrl);
+      expect(download.hasAttribute("download")).toBe(true);
+    } else {
+      expect(screen.queryByRole("heading", { name: "Curriculum vitae" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "Download CV (PDF)" })).toBeNull();
+    }
   });
 
   it("shows project content when repository and demo links are absent", async () => {

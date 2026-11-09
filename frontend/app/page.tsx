@@ -170,6 +170,7 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+      {posts.length > 0 && (
       <section className="landing-section" aria-labelledby="writing-title">
         <div className="section-top flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -180,7 +181,6 @@ export default async function HomePage() {
             Read the blog <span aria-hidden="true">↗</span>
           </Link>
         </div>
-        {posts.length > 0 ? (
           <ol className="writing-list">
             {posts.map((post) => (
               <li key={post.slug}>
@@ -194,23 +194,15 @@ export default async function HomePage() {
               </li>
             ))}
           </ol>
-        ) : (
-          <div className="content-empty">
-            <p>
-              {postsResult.status === "rejected"
-                ? "Writing is temporarily unavailable. Please try again later."
-                : "I'm working on my first posts. They'll appear here once they're ready."}
-            </p>
-          </div>
-        )}
       </section>
+      )}
       <section
         className="contact-panel grid gap-8 md:grid-cols-[1.6fr_1fr]"
         aria-labelledby="contact-title"
       >
         <div>
           <p className="eyebrow contact-brand">
-            <BrandIcon size={28} /> 04 / Contact
+            <BrandIcon size={28} /> {posts.length > 0 ? "04" : "03"} / Contact
           </p>
           <h2 id="contact-title">What are you working on?</h2>
           <p>

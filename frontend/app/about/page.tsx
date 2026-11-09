@@ -131,17 +131,15 @@ export default async function AboutPage() {
         )}
       </ContentSection>
 
-      <ContentSection id="curriculum-vitae" title="Curriculum vitae">
-        {currentProfile.cv_url ? (
+      {currentProfile.cv_url && (
+        <ContentSection id="curriculum-vitae" title="Curriculum vitae">
           <p>
             <a href={currentProfile.cv_url} download>
               Download CV (PDF)
             </a>
           </p>
-        ) : (
-          <p className="profile-empty" role="status">A downloadable CV is not available yet.</p>
-        )}
-      </ContentSection>
+        </ContentSection>
+      )}
     </>
   );
 }
