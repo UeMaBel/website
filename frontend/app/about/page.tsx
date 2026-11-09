@@ -1,4 +1,4 @@
-import profile from "../../page-content/profile.json";
+import { connection } from "next/server";
 import { ContentSection } from "../../components/content/content-section";
 import { Markdown } from "../../components/content/markdown";
 import { PageHeading } from "../../components/content/page-heading";
@@ -44,10 +44,18 @@ function DateRange({ start, end }: { start: string | null; end: string | null })
 }
 
 export default async function AboutPage() {
+  await connection();
   const profileResult = await Promise.allSettled([getProfile()]);
-  const currentProfile: PublicProfile = profileResult[0].status === "fulfilled"
-    ? profileResult[0].value
-    : profile;
+  if (profileResult[0].status === "rejected") {
+    console.error("Unable to load About / CV profile from the backend API.", profileResult[0].reason);
+    return (
+      <>
+        <PageHeading title="About / CV" />
+        <p role="status">Profile information is temporarily unavailable. Please try again later.</p>
+      </>
+    );
+  }
+  const currentProfile: PublicProfile = profileResult[0].value;
   const experience = sortByPosition(currentProfile.experience);
   const education = sortByPosition(currentProfile.education);
   const skills = sortByPosition(currentProfile.skills);

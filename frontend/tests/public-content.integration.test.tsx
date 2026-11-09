@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("next/server", () => ({ connection: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("next/navigation", () => ({
   notFound: mocks.notFound,
   permanentRedirect: mocks.permanentRedirect,
@@ -86,6 +87,37 @@ afterEach(() => {
 
 describe("public content journeys", () => {
 
+  it("renders current database education dates and refreshes after an API outage", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      fetchMock.mockRejectedValueOnce(new Error("offline"));
+      const unavailable = render(await AboutPage());
+      expect(document.querySelector("time")).toBeNull();
+      unavailable.unmount();
+      fetchMock.mockResolvedValue(jsonResponse({
+        ...profile(null),
+        education: [
+          { position: 2, institution: "Deutsche Telekom AG", qualification: "Fachinformatiker Systemintegration", start_date: "2009-09-01", end_date: "2012-06-01", description: "" },
+          { position: 0, institution: "University of applied Science Rosenheim", qualification: "B. Sc. Business Mathematics and Actuarial Science", start_date: "2013-09-01", end_date: "2017-08-31", description: "" },
+        ],
+        experience: [
+          { position: 0, employer: "Current project", role: "Lead", start_date: "2020-04-01", end_date: null, description: "" },
+        ],
+      }));
+      render(await AboutPage());
+      expect(screen.getByText("September 2013")).toBeTruthy();
+      expect(screen.getByText("August 2017")).toBeTruthy();
+      expect(screen.getByText("September 2009")).toBeTruthy();
+      expect(screen.getByText("June 2012")).toBeTruthy();
+      expect(screen.getByText("April 2020")).toBeTruthy();
+      expect(Array.from(document.querySelectorAll("time"), (element) => element.dateTime)).toEqual([
+        "2020-04-01", "2013-09-01", "2017-08-31", "2009-09-01", "2012-06-01",
+      ]);
+    } finally {
+      errorLog.mockRestore();
+    }
+  });
+
   it.each([false, true])("honors detail thumbnail hiding (%s) while retaining project listing images", async (hidden) => {
     const item = project({
       thumbnail: { url: "/media/uploads/cover.png", alt_text: "Project cover" },
@@ -117,7 +149,7 @@ describe("public content journeys", () => {
     expect(screen.getByRole("img", { name: "Article cover" })).toBeTruthy();
   });
 
-  it("uses the bundled profile snapshot when the profile API is unavailable", async () => {
+  it("shows an unavailable state instead of stale profile dates when the API fails", async () => {
     fetchMock.mockRejectedValue(new Error("offline"));
     const privacy = render(DatenschutzPage());
     expect(screen.getByRole("heading", { name: "Datenschutz", level: 1 })).toBeTruthy();
@@ -125,8 +157,9 @@ describe("public content journeys", () => {
     expect(screen.queryByText(/Arbeitsfassung/)).toBeNull();
     privacy.unmount();
     const about = render(await AboutPage());
-    expect(screen.getByText("Hi, I'm Matthias.")).toBeTruthy();
-    expect(screen.getByText("BDE Datahub")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toContain("Profile information is temporarily unavailable");
+    expect(screen.queryByText("BDE Datahub")).toBeNull();
+    expect(document.querySelector("time")).toBeNull();
     about.unmount();
     expect(fetchMock).toHaveBeenCalledWith(
       new URL("https://content.example.test/api/v1/profile/"),
