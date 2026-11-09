@@ -224,7 +224,7 @@ li + li {
 .profile-skill-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.65rem;
   padding: 0;
   margin: 0;
   list-style: none;
@@ -234,9 +234,12 @@ ul.profile-skill-list > li {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 0.5rem;
-  padding: 0.25rem 0.65rem;
+  align-items: center;
+  padding: 0.4rem 0.9rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.25rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, var(--color-paper), var(--color-surface));
+  box-shadow: 0 2px 5px rgb(32 40 32 / 6%), inset 0 1px 0 rgb(255 255 255 / 75%);
 }
 
 ul.profile-skill-list > li + li {
